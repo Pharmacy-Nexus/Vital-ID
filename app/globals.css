@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: #F5F1E8; color: #16171B; }
+body { font-family: Arial, sans-serif; }
+button, input { font: inherit; }
+.hairline { border-color: rgba(22,23,27,.12); }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+.skeleton { background: linear-gradient(90deg,#eee 25%,#f7f7f7 50%,#eee 75%); background-size:200% 100%; animation:s 1.2s infinite; }
+@keyframes s { from{background-position:200% 0} to{background-position:-200% 0} }
