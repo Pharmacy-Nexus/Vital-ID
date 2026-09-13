@@ -1,0 +1,2 @@
+import { SourceType } from "@/lib/types";
+export default function SourceBadge({source,detail,date}:{source:SourceType;detail?:string;date?:string}){ const label=source==="provider"?"Provider verified":source==="document"?"Document verified":"Patient reported"; return <div className="text-[10px] text-muted"><span className="font-bold text-ink">{label}</span>{detail?` · ${detail}`:""}{date?` · ${date}`:""}</div> }

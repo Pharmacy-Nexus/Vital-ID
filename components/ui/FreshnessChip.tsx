@@ -1,0 +1,2 @@
+import { Freshness } from "@/lib/types";
+export default function FreshnessChip({freshness}:{freshness:Freshness}){ const map={current:["Current","bg-lime/20 text-ink"],review:["Review recommended","bg-surface text-muted"],outdated:["Outdated","bg-coral/10 text-coral"]} as const; const [label,cls]=map[freshness]; return <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${cls}`}>{label}</span> }

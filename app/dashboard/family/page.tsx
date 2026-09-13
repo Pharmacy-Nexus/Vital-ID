@@ -1,1 +1,2 @@
-
+import Link from "next/link";
+export default function FamilyPage(){return <div className="max-w-md mx-auto px-5 pt-6"><h1 className="text-2xl font-bold mb-2">Family</h1><p className="text-sm text-muted mb-6">Manage medical identities for people you care for.</p><Link href="/id/demo-child-001" className="block bg-white rounded-2xl p-5 border hairline"><p className="font-bold">Youssef Hassan</p><p className="text-xs text-muted mt-1">Child profile · Guardian managed</p></Link></div>}
