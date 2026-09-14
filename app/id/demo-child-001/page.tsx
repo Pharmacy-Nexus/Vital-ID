@@ -10,5 +10,5 @@ export default function ChildSafetyPage() {
   const patient = usePatient("demo-child-001");
   if (!patient) return null;
   if (showDoctor) return <DoctorGate patient={patient} />;
-  return <EmergencyView patient={patient} deviceType="bagtag" onRequestDoctor={() => setShowDoctor(true)} />;
+  return <EmergencyView patient={patient} onRequestDoctor={() => setShowDoctor(true)} />;
 }
