@@ -41,7 +41,7 @@ function TimelineItem({ event }: { event: TimelineEvent }) {
   );
 }
 
-export default function DoctorRecord({ patient }: { patient: PatientProfile }) {
+export default function DoctorRecord({ patient, doctorAccessToken }: { patient: PatientProfile; doctorAccessToken?: string }) {
   const { tr } = useLang();
   const [showDoc, setShowDoc] = useState<string | null>(null);
 
@@ -84,7 +84,7 @@ export default function DoctorRecord({ patient }: { patient: PatientProfile }) {
         <Section title={tr("Documents", "المستندات")} icon={<FolderOpen size={18} />}>{patient.documents.length === 0 ? <p className="text-sm text-muted py-2">{tr("No documents uploaded.", "لا توجد مستندات مرفوعة.")}</p> : patient.documents.map((d) => <button key={d.id} onClick={() => setShowDoc(d.id)} className="w-full flex items-center justify-between py-3 border-b hairline last:border-0 text-start"><div className="flex items-center gap-3"><FileText size={18} className="text-muted" /><div><p className="font-bold text-sm">{d.title}</p><p className="text-[11px] text-muted">{d.date} · {d.provider}</p></div></div><span className="text-[10px] font-bold uppercase text-aubergine">{tr("View", "عرض")}</span></button>)}</Section>
       </div>
 
-      <DocumentViewer document={patient.documents.find((d) => d.id === showDoc) ?? null} onClose={() => setShowDoc(null)} />
+      <DocumentViewer document={patient.documents.find((d) => d.id === showDoc) ?? null} onClose={() => setShowDoc(null)} doctorAccessToken={doctorAccessToken} />
     </div>
   );
 }

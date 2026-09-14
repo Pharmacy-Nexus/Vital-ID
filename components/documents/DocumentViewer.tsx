@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { Download, ExternalLink, FileText, X } from "lucide-react";
-import { getLocalFile } from "@/lib/fileStore";
+import { getDoctorDocumentUrl, getLocalFile } from "@/lib/fileStore";
 import type { PatientDocument } from "@/lib/types";
 import { useLang } from "@/components/ui/LangProvider";
 
-export default function DocumentViewer({ document, onClose }: { document: PatientDocument | null; onClose: () => void }) {
+export default function DocumentViewer({ document, onClose, doctorAccessToken }: { document: PatientDocument | null; onClose: () => void; doctorAccessToken?: string }) {
   const { tr } = useLang();
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -14,14 +14,24 @@ export default function DocumentViewer({ document, onClose }: { document: Patien
 
   useEffect(() => {
     let currentUrl: string | null = null;
+    let revokeCurrentUrl = false;
     let cancelled = false;
     const load = async () => {
+      setUrl(null);
       if (!document?.fileKey) { setMissing(Boolean(document)); return; }
       setLoading(true); setMissing(false);
       try {
+        if (doctorAccessToken && document.fileKey.startsWith("cloud:")) {
+          currentUrl = await getDoctorDocumentUrl(document.id, doctorAccessToken);
+          revokeCurrentUrl = false;
+          if (!currentUrl) { if (!cancelled) setMissing(true); return; }
+          if (!cancelled) setUrl(currentUrl);
+          return;
+        }
         const stored = await getLocalFile(document.fileKey);
         if (!stored) { if (!cancelled) setMissing(true); return; }
         currentUrl = URL.createObjectURL(stored.blob);
+        revokeCurrentUrl = true;
         if (!cancelled) setUrl(currentUrl);
       } catch {
         if (!cancelled) setMissing(true);
@@ -30,8 +40,8 @@ export default function DocumentViewer({ document, onClose }: { document: Patien
       }
     };
     load();
-    return () => { cancelled = true; if (currentUrl) URL.revokeObjectURL(currentUrl); };
-  }, [document]);
+    return () => { cancelled = true; if (currentUrl && revokeCurrentUrl) URL.revokeObjectURL(currentUrl); };
+  }, [document, doctorAccessToken]);
 
   if (!document) return null;
   const isImage = document.mimeType?.startsWith("image/");
@@ -44,7 +54,7 @@ export default function DocumentViewer({ document, onClose }: { document: Patien
 
       <div className="bg-white rounded-2xl border hairline overflow-hidden min-h-[260px] flex items-center justify-center">
         {loading && <p className="text-sm text-muted p-8">{tr("Loading file…", "جارٍ تحميل الملف…")}</p>}
-        {!loading && missing && <div className="text-center p-8"><FileText size={36} className="text-muted/40 mx-auto mb-3"/><p className="font-bold">{tr("No file is attached to this record.", "لا يوجد ملف مرفق بهذا السجل.")}</p><p className="text-xs text-muted mt-1">{tr("Older demo documents contain metadata only.", "المستندات التجريبية القديمة تحتوي على بيانات وصفية فقط.")}</p></div>}
+        {!loading && missing && <div className="text-center p-8"><FileText size={36} className="text-muted/40 mx-auto mb-3"/><p className="font-bold">{tr("The file is unavailable on this device or session.", "الملف غير متاح على هذا الجهاز أو في هذه الجلسة.")}</p><p className="text-xs text-muted mt-1">{tr("Cloud files require an owner or authorized clinician session.", "ملفات السحابة تتطلب جلسة مالك أو جلسة طبية مصرح بها.")}</p></div>}
         {!loading && url && isImage && <img src={url} alt={document.title} className="max-w-full h-auto object-contain" />}
         {!loading && url && isPdf && <iframe src={url} title={document.title} className="w-full h-[65vh] bg-white" />}
         {!loading && url && !isImage && !isPdf && <div className="text-center p-8"><FileText size={36} className="text-aubergine mx-auto mb-3"/><p className="font-bold">{document.fileName ?? document.title}</p><p className="text-xs text-muted mt-1">{tr("Preview is not available for this file type.", "المعاينة غير متاحة لهذا النوع من الملفات.")}</p></div>}

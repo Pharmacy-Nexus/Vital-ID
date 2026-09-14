@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import { patients as seedPatients } from "@/data/demo/patients";
 import type { PatientProfile } from "@/lib/types";
+import { upsertCloudPatient } from "@/lib/cloud/repository";
 
 const KEY = "vital-id-demo-state";
 const EVENT = "vital-id-patient-state-changed";
 
-type DemoPatientState = {
+export type DemoPatientState = {
   version: 2;
   activeSlug: string;
   patients: Record<string, PatientProfile>;
@@ -92,11 +93,13 @@ export function setActiveSlug(slug: string) {
 
 export function savePatient(patient: PatientProfile, makeActive = false) {
   const state = readPatientState();
+  const normalized = normalizePatient(patient);
   writePatientState({
     ...state,
     activeSlug: makeActive ? patient.slug : state.activeSlug,
-    patients: { ...state.patients, [patient.slug]: normalizePatient(patient) },
+    patients: { ...state.patients, [patient.slug]: normalized },
   });
+  void upsertCloudPatient(normalized).catch(() => {});
 }
 
 export function updatePatient(slug: string, updater: (patient: PatientProfile) => PatientProfile) {
@@ -149,4 +152,43 @@ export function useActivePatient() {
   }, []);
 
   return patient;
+}
+
+export function hydratePatientsFromCloud(patients: PatientProfile[], activeSlug?: string) {
+  if (!patients.length) return;
+  const current = readPatientState();
+  const merged = { ...current.patients };
+  patients.forEach((patient) => { merged[patient.slug] = normalizePatient(patient); });
+  const nextActive = activeSlug && merged[activeSlug] ? activeSlug : (merged[current.activeSlug] ? current.activeSlug : patients[0].slug);
+  writePatientState({ ...current, activeSlug: nextActive, patients: merged });
+}
+
+export function useAllPatients() {
+  const [patients, setPatients] = useState<PatientProfile[]>(() => Object.values(seedPatients).map((p) => normalizePatient(clone(p))));
+  useEffect(() => {
+    const refresh = () => setPatients(Object.values(readPatientState().patients));
+    refresh();
+    window.addEventListener(EVENT, refresh);
+    window.addEventListener("storage", refresh);
+    return () => {
+      window.removeEventListener(EVENT, refresh);
+      window.removeEventListener("storage", refresh);
+    };
+  }, []);
+  return patients;
+}
+
+export function useActiveSlug() {
+  const [slug, setSlug] = useState("demo-001");
+  useEffect(() => {
+    const refresh = () => setSlug(getActiveSlug());
+    refresh();
+    window.addEventListener(EVENT, refresh);
+    window.addEventListener("storage", refresh);
+    return () => {
+      window.removeEventListener(EVENT, refresh);
+      window.removeEventListener("storage", refresh);
+    };
+  }, []);
+  return slug;
 }

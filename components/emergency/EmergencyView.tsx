@@ -19,12 +19,12 @@ const fallbackDisplay = {
   documents: false,
 };
 
-export default function EmergencyView({ patient, device, scanId, onRequestDoctor }: { patient: PatientProfile; device?: LinkedDevice | null; scanId?: string; onRequestDoctor: () => void }) {
+export default function EmergencyView({ patient, device, scanId, remote = false, onRequestDoctor }: { patient: PatientProfile; device?: LinkedDevice | null; scanId?: string; remote?: boolean; onRequestDoctor: () => void }) {
   const { tr } = useLang();
   const [msg, setMsg] = useState("");
   const display = device?.display ?? fallbackDisplay;
 
-  useEffect(() => { recordScan(scanId ?? patient.slug); }, [patient.slug, scanId]);
+  useEffect(() => { if (!remote) recordScan(scanId ?? patient.slug); }, [patient.slug, scanId, remote]);
 
   const allergies = useMemo(() => patient.allergies.filter((a) => a.visibility !== "private"), [patient.allergies]);
   const conditions = useMemo(() => patient.conditions.filter((c) => c.status === "active" && c.visibility !== "private"), [patient.conditions]);
@@ -40,8 +40,16 @@ export default function EmergencyView({ patient, device, scanId, onRequestDoctor
     setMsg(tr("Requesting location permission…", "جارٍ طلب إذن الموقع…"));
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setMsg(tr("Location shared in demo.", "تمت مشاركة الموقع في النسخة التجريبية."));
-        addActivity({ type: "access", title: "Location shared", detail: `${scanId ?? patient.slug} · ${position.coords.latitude.toFixed(3)}, ${position.coords.longitude.toFixed(3)}` });
+        setMsg(tr("Location shared.", "تمت مشاركة الموقع."));
+        if (remote && scanId) {
+          void fetch(`/api/public/id/${encodeURIComponent(scanId)}/scan`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ event: "location", latitude: position.coords.latitude, longitude: position.coords.longitude }),
+          }).catch(() => {});
+        } else {
+          addActivity({ type: "access", title: "Location shared", detail: `${scanId ?? patient.slug} · ${position.coords.latitude.toFixed(3)}, ${position.coords.longitude.toFixed(3)}` });
+        }
       },
       () => setMsg(tr("Location permission was denied.", "تم رفض إذن الوصول للموقع.")),
       { enableHighAccuracy: false, timeout: 10000 }

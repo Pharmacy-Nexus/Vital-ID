@@ -8,7 +8,12 @@ export default function ActivityPage() {
   const { tr } = useLang();
   const [activity, setActivity] = useState<ReturnType<typeof getActivity>>([]);
 
-  useEffect(() => { setActivity(getActivity()); }, []);
+  useEffect(() => {
+    const refresh = () => setActivity(getActivity());
+    refresh();
+    const timer = window.setInterval(refresh, 5000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const grouped = activity.reduce<Record<string, typeof activity>>((acc, item) => {
     if (!acc[item.date]) acc[item.date] = [];

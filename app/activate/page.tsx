@@ -80,7 +80,7 @@ export default function ActivatePage() {
 
     const patient: PatientProfile = {
       ...omarHassan,
-      slug: "demo-001",
+      slug: `p-${crypto.randomUUID().replace(/-/g, "")}`,
       firstName,
       lastName,
       age,

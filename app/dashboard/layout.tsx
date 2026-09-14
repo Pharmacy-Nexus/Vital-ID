@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Home, FileText, FolderOpen, Watch, User } from "lucide-react";
 import { LangToggle, useLang } from "@/components/ui/LangProvider";
+import CloudSyncBanner from "@/components/cloud/CloudSyncBanner";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -21,6 +22,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="fixed top-3 right-3 z-[70] bg-white/90 backdrop-blur border hairline rounded-full px-3 py-2 shadow-sm">
         <LangToggle />
       </div>
+      <CloudSyncBanner />
       {children}
       <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t hairline z-50 pb-safe">
         <div className="max-w-md mx-auto flex items-center justify-around py-2">

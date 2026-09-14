@@ -1,10 +1,11 @@
 "use client";
 
-import { resetPatientData } from "@/lib/patientStore";
+import { getActiveSlug, resetPatientData } from "@/lib/patientStore";
+import { insertCloudActivity } from "@/lib/cloud/repository";
 
-type ActivityItem = { id:string; type:"scan"|"access"|"update"; title:string; detail:string; time:string; date:string };
-type ScanItem = { id:string; at:string; slug:string };
-type DoctorSession = { status:"active"|"ended"; startedAt:string; expiresAt:string };
+export type ActivityItem = { id:string; type:"scan"|"access"|"update"; title:string; detail:string; time:string; date:string };
+export type ScanItem = { id:string; at:string; slug:string };
+export type DoctorSession = { status:"active"|"ended"; startedAt:string; expiresAt:string };
 
 const A="vital-id-activity", S="vital-id-scans", D="vital-id-devices", DS="vital-id-doctor-session";
 const hasWindow = () => typeof window !== "undefined";
@@ -14,11 +15,13 @@ const write = (key:string, value:unknown) => { if(hasWindow()) localStorage.setI
 export const formatTime = (v:string|number|Date) => new Date(v).toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
 export const formatDate = (v:string|number|Date) => new Date(v).toLocaleDateString([], {day:"2-digit", month:"short", year:"numeric"});
 export const getActivity = () => read<ActivityItem[]>(A, []);
+export const replaceActivity = (items: ActivityItem[]) => write(A, items);
 export const getScans = () => read<ScanItem[]>(S, []);
 export function addActivity(input: Omit<ActivityItem,"id"|"time"|"date"> & Partial<Pick<ActivityItem,"id"|"time"|"date">>) {
   const now = new Date();
   const item: ActivityItem = { id:input.id ?? crypto.randomUUID(), type:input.type, title:input.title, detail:input.detail, time:input.time ?? formatTime(now), date:input.date ?? formatDate(now) };
   write(A, [item, ...getActivity()]);
+  void insertCloudActivity(item.type, item.title, item.detail, getActiveSlug()).catch(() => {});
   return item;
 }
 export function recordScan(slug:string) {

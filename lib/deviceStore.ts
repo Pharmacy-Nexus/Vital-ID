@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { devices as seedDevices, defaultDisplaySettings } from "@/data/demo/devices";
 import type { LinkedDevice } from "@/lib/types";
 import { addActivity } from "@/lib/store";
+import { upsertCloudDevice } from "@/lib/cloud/repository";
 
 const KEY = "vital-id-linked-devices-v3";
 const EVENT = "vital-id-device-state-changed";
@@ -59,8 +60,10 @@ export function getPrimaryDevice(patientSlug: string) {
 
 export function saveDevice(device: LinkedDevice) {
   const all = readDevices();
+  const normalized = normalize(device);
   const exists = all.some((d) => d.id === device.id);
-  writeDevices(exists ? all.map((d) => d.id === device.id ? normalize(device) : d) : [normalize(device), ...all]);
+  writeDevices(exists ? all.map((d) => d.id === device.id ? normalized : d) : [normalized, ...all]);
+  void upsertCloudDevice(normalized).catch(() => {});
 }
 
 export function updateDevice(id: string, updater: (device: LinkedDevice) => LinkedDevice) {
@@ -69,6 +72,7 @@ export function updateDevice(id: string, updater: (device: LinkedDevice) => Link
   if (!current) return null;
   const next = normalize(updater(clone(current)));
   writeDevices(all.map((d) => d.id === id ? next : d));
+  void upsertCloudDevice(next).catch(() => {});
   return next;
 }
 
@@ -83,7 +87,7 @@ export function createDevice(patientSlug: string, name: string, type: LinkedDevi
     id: crypto.randomUUID(),
     name: name.trim() || "Medical ID",
     patientSlug,
-    qrSlug: `qr-${crypto.randomUUID().replace(/-/g, "").slice(0, 16)}`,
+    qrSlug: `qr-${crypto.randomUUID().replace(/-/g, "")}`,
     type,
     status: "active",
     createdAt: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
@@ -95,7 +99,7 @@ export function createDevice(patientSlug: string, name: string, type: LinkedDevi
 }
 
 export function regenerateQr(id: string) {
-  const next = updateDevice(id, (device) => ({ ...device, qrSlug: `qr-${crypto.randomUUID().replace(/-/g, "").slice(0, 16)}` }));
+  const next = updateDevice(id, (device) => ({ ...device, qrSlug: `qr-${crypto.randomUUID().replace(/-/g, "")}` }));
   if (next) addActivity({ type: "update", title: "QR link regenerated", detail: next.name });
   return next;
 }
@@ -111,6 +115,7 @@ export function updateDeviceByQr(qrSlug: string, updater: (device: LinkedDevice)
   if (!current) return null;
   const next = normalize(updater(clone(current)));
   writeDevices(all.map((d) => d.id === current.id ? next : d));
+  void upsertCloudDevice(next).catch(() => {});
   return next;
 }
 
@@ -133,4 +138,12 @@ export function useDevices() {
     };
   }, []);
   return devices;
+}
+
+export function hydrateDevicesFromCloud(devices: LinkedDevice[]) {
+  if (!devices.length) return;
+  const local = readDevices();
+  const byId = new Map(local.map((device) => [device.id, device]));
+  devices.forEach((device) => byId.set(device.id, normalize(device)));
+  writeDevices(Array.from(byId.values()));
 }

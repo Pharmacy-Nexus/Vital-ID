@@ -8,29 +8,76 @@ import DemoTag from "@/components/ui/DemoTag";
 import { getDeviceByQrSlug, markDeviceScanned } from "@/lib/deviceStore";
 import { usePatient } from "@/lib/patientStore";
 import { useLang } from "@/components/ui/LangProvider";
-import type { LinkedDevice } from "@/lib/types";
+import type { LinkedDevice, PatientProfile } from "@/lib/types";
 
 export default function MedicalIdPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
   const router = useRouter();
   const { tr } = useLang();
   const [showDoctor, setShowDoctor] = useState(false);
-  const [device, setDevice] = useState<LinkedDevice | null>(null);
+  const [localDevice, setLocalDevice] = useState<LinkedDevice | null>(null);
+  const [remoteDevice, setRemoteDevice] = useState<LinkedDevice | null>(null);
+  const [remotePatient, setRemotePatient] = useState<PatientProfile | null>(null);
+  const [remoteDisabled, setRemoteDisabled] = useState(false);
   const [resolved, setResolved] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     const found = getDeviceByQrSlug(slug);
-    setDevice(found);
-    setResolved(true);
+    setLocalDevice(found);
     if (found?.status === "active") markDeviceScanned(slug);
+    if (slug.startsWith("demo-") && !found) setResolved(true);
+
+    const loadCloud = async (logScan = false) => {
+      try {
+        const response = await fetch(`/api/public/id/${encodeURIComponent(slug)}`, { cache: "no-store" });
+        if (response.ok) {
+          const payload = await response.json();
+          if (cancelled) return;
+          setRemotePatient(payload.patient as PatientProfile);
+          setRemoteDevice(payload.device as LinkedDevice);
+          setRemoteDisabled(false);
+          setResolved(true);
+          if (logScan) {
+            void fetch(`/api/public/id/${encodeURIComponent(slug)}/scan`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ event: "scan" }),
+            }).catch(() => {});
+          }
+          return;
+        }
+        if (!cancelled && response.status === 410) {
+          setRemoteDisabled(true);
+          setResolved(true);
+        }
+      } catch {
+        // Local demo fallback remains available when cloud is not configured.
+      } finally {
+        if (!cancelled) setResolved(true);
+      }
+    };
+
+    void loadCloud(true);
+    const timer = window.setInterval(() => void loadCloud(false), 15000);
+    const onVisible = () => { if (document.visibilityState === "visible") void loadCloud(false); };
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, [slug]);
 
-  // Backward compatibility: old /id/demo-001 and /id/demo-child-001 links still work.
-  const patientSlug = useMemo(() => device?.patientSlug ?? (slug.startsWith("demo-") ? slug : "__invalid__"), [device, slug]);
-  const patient = usePatient(patientSlug);
-  const isActive = device ? device.status === "active" : slug.startsWith("demo-");
+  const localPatientSlug = useMemo(() => localDevice?.patientSlug ?? (slug.startsWith("demo-") ? slug : "__invalid__"), [localDevice, slug]);
+  const localPatient = usePatient(localPatientSlug);
+  const patient = remotePatient ?? localPatient;
+  const device = remoteDevice ?? localDevice;
+  const isRemote = Boolean(remotePatient && remoteDevice);
+  const isActive = remoteDisabled ? false : device ? device.status === "active" : slug.startsWith("demo-");
 
-  if (!resolved && !slug.startsWith("demo-")) {
+  if (!resolved) {
     return <div className="min-h-screen bg-bone flex items-center justify-center text-muted">{tr("Loading Medical ID…", "جارٍ تحميل الهوية الطبية…")}</div>;
   }
 
@@ -46,7 +93,7 @@ export default function MedicalIdPage({ params }: { params: Promise<{ slug: stri
     );
   }
 
-  if (showDoctor) return <DoctorGate patient={patient} />;
+  if (showDoctor) return <DoctorGate patient={patient} scanId={device?.qrSlug ?? slug} cloudPreferred={isRemote} />;
 
-  return <EmergencyView patient={patient} device={device} scanId={device?.qrSlug ?? slug} onRequestDoctor={() => setShowDoctor(true)} />;
+  return <EmergencyView patient={patient} device={device} scanId={device?.qrSlug ?? slug} remote={isRemote} onRequestDoctor={() => setShowDoctor(true)} />;
 }

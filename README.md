@@ -1,37 +1,60 @@
-# VITAL ID Functional Demo v3
+# VITAL ID Functional Demo v4 — Cloud Sync
 
-This build extends the functional demo with configurable, unique QR IDs and real local document/image attachments.
+This version moves the important shared state from a one-browser demo toward a real multi-device prototype using Supabase.
 
-## What is new in v3
+## What v4 adds
 
-- Medical items added in **Dashboard → Medical** are read by the Emergency QR page from the same patient state.
-- Every linked physical ID now has its own unique `qrSlug` and therefore its own QR URL.
-- Bracelet, wallet card, bag tag and newly created IDs can have different public emergency sections.
-- Device owners can rename an ID, enable/disable public sections, disable/reactivate it, or regenerate its QR URL. Regenerating a QR invalidates the old custom device URL in the current demo state.
-- Additional Medical IDs can be created from the Devices page.
-- Documents and images can now be uploaded as real browser files, not just fake filenames.
-- Uploaded images can be previewed; PDFs can be viewed in-browser; files can be opened/downloaded/deleted.
-- Document metadata can be marked Emergency-visible or Private. The public Emergency page only shows allowed metadata; the file remains part of the protected record.
-- Doctor Record uses the real uploaded local attachment when available.
-- Camera/photo input is supported on compatible phones.
-- Reset Demo also resets the new device configuration and locally stored attachments.
+- **Cloud patient sync**: edits from Dashboard → Medical can be stored in Supabase and then read from a QR scan on another phone/browser.
+- **Per-device QR identity**: every bracelet/card/tag keeps its own `qrSlug`, active/deactivated state and emergency display settings.
+- **Live emergency view**: `/id/<qrSlug>` tries the server/cloud first, uses `no-store`, refreshes every 15 seconds while open, and refreshes when the tab becomes visible again.
+- **Server-side emergency filtering**: private items are stripped before the public response is sent. Hidden sections are not merely hidden with CSS.
+- **Cloud owner authentication**: `/login` supports Supabase email/password sign-in and account creation.
+- **Dashboard cloud status**: the owner sees whether cloud sync is connected. The first signed-in session uploads the existing local demo state if the cloud account is empty.
+- **Cloud documents/images**: when the owner is signed in, new uploads go to the private Supabase Storage bucket `medical-documents`; local IndexedDB remains the fallback when signed out.
+- **Authorized clinician document view**: cloud files can be opened through a short-lived clinician session after the demo OTP.
+- **Cloud activity**: public scans and shared locations are written to `activity_logs` and pulled into the owner dashboard.
+- **Unique patient activation**: a newly activated person gets a unique patient slug instead of overwriting `demo-001`.
+- **Dynamic family profiles**: Family now lists patient profiles and lets the owner switch which one is being managed.
 
-## Demo routes
+## Setup
+
+See [SUPABASE_SETUP.md](./SUPABASE_SETUP.md).
+
+The minimum sequence is:
+
+1. Create a Supabase project.
+2. Run `supabase/migrations/001_vital_id.sql` in Supabase SQL Editor.
+3. Add the variables from `.env.example` to Vercel.
+4. Redeploy.
+5. Open `/login`, create/sign into the owner account.
+6. Wait for **Cloud synced** on the Dashboard.
+7. Edit an Emergency-visible medical item and scan the device QR from another phone.
+
+## Important routes
 
 - `/` — demo home
-- `/dashboard` — patient dashboard
-- `/dashboard/medical` — add/edit medical data
-- `/dashboard/documents` — upload/view images and PDFs
-- `/dashboard/devices` — unique QR IDs and per-device public display controls
-- `/id/<qrSlug>` — emergency view for a specific physical ID
-- `/activate` — activation flow
+- `/login` — owner cloud sign-in
+- `/activate` — create a new patient profile and first device
+- `/dashboard` — owner dashboard + cloud sync status
+- `/dashboard/medical` — add/edit patient medical data
+- `/dashboard/documents` — upload/view files and images
+- `/dashboard/devices` — independent QR devices and display controls
+- `/dashboard/family` — switch/manage multiple patient profiles
+- `/id/<qrSlug>` — public emergency view for one physical ID
 
-Demo OTP: `4827`
+Demo clinician OTP: `4827` (configurable with `VITAL_ID_DEMO_OTP`).
 
-## Important architecture note
+## Storage model
 
-This remains a **local demo**. Patient state is stored in `localStorage`, and file blobs are stored in browser `IndexedDB`.
+The current prototype intentionally keeps the existing `PatientProfile` and `LinkedDevice` objects as JSONB records in Supabase. This makes the migration from the existing demo small and predictable. A later production version can normalize clinical items into dedicated tables without changing the public product flow.
 
-That means data edited on one browser/device is not automatically available on another browser/device. A real emergency QR that must always show the latest owner data on any visitor phone requires a shared backend/database (for example Supabase) and secure cloud file storage. The UI/data model in this build is structured so that storage can be replaced in the next phase.
+The browser still keeps a local cache for offline/demo behavior. Supabase is the shared source used by public QR scans once cloud sync is configured.
 
-Do not use this demo with real patient data.
+## Security boundaries in this prototype
+
+- `SUPABASE_SERVICE_ROLE_KEY` is used only by server routes and must never be exposed in a `NEXT_PUBLIC_*` variable.
+- Database tables have RLS enabled and ordinary anonymous users are not granted table access.
+- Public QR requests go through server routes that return only Emergency-visible fields allowed by that particular device.
+- The medical document bucket is private. The owner reads files through authenticated Storage access; an authorized clinician gets a short-lived signed URL.
+- The fixed clinician OTP is **demo-only**. Do not use it with real patient data.
+- This remains a prototype. Do not store real patient health information until privacy, consent, security testing, legal requirements, retention, audit controls and production authentication have been reviewed.

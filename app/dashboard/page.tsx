@@ -18,8 +18,13 @@ export default function DashboardHome() {
   const [scans, setScans] = useState<ReturnType<typeof getScans>>([]);
 
   useEffect(() => {
-    setActivity(getActivity());
-    setScans(getScans());
+    const refresh = () => {
+      setActivity(getActivity());
+      setScans(getScans());
+    };
+    refresh();
+    const timer = window.setInterval(refresh, 5000);
+    return () => window.clearInterval(timer);
   }, []);
 
   const emergencyCompleteness = useMemo(() => {

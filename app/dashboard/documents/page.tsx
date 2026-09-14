@@ -48,9 +48,10 @@ export default function DocumentsPage() {
     if (!patient || !pendingFile) return;
     setSaving(true);
     try {
-      const fileKey = await saveLocalFile(pendingFile);
+      const documentId = crypto.randomUUID();
+      const fileKey = await saveLocalFile(pendingFile, documentId, patient.slug);
       const doc: PatientDocument = {
-        id: crypto.randomUUID(),
+        id: documentId,
         title: title.trim() || pendingFile.name,
         date: date || today(),
         provider: provider.trim() || tr("Patient upload", "رفع المريض"),
