@@ -53,6 +53,40 @@ export type EmergencyContact = {
   visibility?: Visibility;
 };
 
+export type PatientDocument = {
+  id: string;
+  title: string;
+  date: string;
+  provider: string;
+  fileKey?: string;
+  fileName?: string;
+  mimeType?: string;
+  size?: number;
+  visibility?: Visibility;
+};
+
+export type DeviceDisplaySettings = {
+  basicInfo: boolean;
+  bloodType: boolean;
+  allergies: boolean;
+  conditions: boolean;
+  medications: boolean;
+  emergencyContact: boolean;
+  documents: boolean;
+};
+
+export type LinkedDevice = {
+  id: string;
+  name: string;
+  patientSlug: string;
+  qrSlug: string;
+  type: "bracelet" | "card" | "bagtag" | "travel";
+  status: "active" | "deactivated";
+  createdAt: string;
+  lastScanned?: string;
+  display: DeviceDisplaySettings;
+};
+
 export type PatientProfile = {
   slug: string;
   firstName: string;
@@ -91,5 +125,5 @@ export type PatientProfile = {
   vaccinations: Array<{ id: string; name: string; date: string; provider?: string }>;
   timeline: TimelineEvent[];
   emergencyContacts: EmergencyContact[];
-  documents: Array<{ id: string; title: string; date: string; provider: string }>;
+  documents: PatientDocument[];
 };

@@ -8,6 +8,7 @@ import { LangToggle, useLang } from "@/components/ui/LangProvider";
 import { omarHassan } from "@/data/demo/patients";
 import { savePatient } from "@/lib/patientStore";
 import { addActivity } from "@/lib/store";
+import { createDevice, getPrimaryDevice } from "@/lib/deviceStore";
 import type { PatientProfile } from "@/lib/types";
 
 const steps = ["welcome", "who", "contact", "emergency", "success"] as const;
@@ -55,6 +56,7 @@ export default function ActivatePage() {
   const [who, setWho] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(initialForm);
   const [error, setError] = useState("");
+  const [emergencyHref, setEmergencyHref] = useState("/id/demo-001");
 
   const set = (key: keyof FormState, value: string) => setForm((prev) => ({ ...prev, [key]: value }));
 
@@ -126,6 +128,9 @@ export default function ActivatePage() {
     };
 
     savePatient(patient, true);
+    const existingDevice = getPrimaryDevice(patient.slug);
+    const activeDevice = existingDevice ?? createDevice(patient.slug, tr("Emergency ID", "هوية الطوارئ"), who === "child" ? "bagtag" : "bracelet");
+    setEmergencyHref(`/id/${activeDevice.qrSlug}`);
     addActivity({ type: "update", title: "Medical ID activated", detail: `${firstName} ${lastName}` });
     setStep("success");
   };
@@ -214,7 +219,7 @@ export default function ActivatePage() {
           <h1 className="text-3xl font-bold mb-3">{tr("Your Emergency Medical ID is Active.", "تم تفعيل هويتك الطبية للطوارئ.")}</h1>
           <p className="text-muted mb-8">{tr("The data you entered is now the same data used by Emergency, Dashboard and Doctor views.", "البيانات التي أدخلتها أصبحت هي نفس البيانات المستخدمة في الطوارئ ولوحة التحكم وسجل الطبيب.")}</p>
           <div className="w-full space-y-3">
-            <a href="/id/demo-001" className="block w-full min-h-[52px] rounded-2xl bg-ink text-bone font-bold text-sm flex items-center justify-center">{tr("VIEW MY EMERGENCY ID", "عرض هوية الطوارئ")}</a>
+            <a href={emergencyHref} className="block w-full min-h-[52px] rounded-2xl bg-ink text-bone font-bold text-sm flex items-center justify-center">{tr("VIEW MY EMERGENCY ID", "عرض هوية الطوارئ")}</a>
             <a href="/dashboard/medical" className="block w-full min-h-[52px] rounded-2xl border-2 border-ink font-bold text-sm flex items-center justify-center">{tr("EDIT MEDICAL PROFILE", "تعديل الملف الطبي")}</a>
           </div>
         </motion.div>

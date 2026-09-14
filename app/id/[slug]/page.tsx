@@ -1,23 +1,38 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { devices } from "@/data/demo/devices";
 import EmergencyView from "@/components/emergency/EmergencyView";
 import DoctorGate from "@/components/medical/DoctorGate";
 import DemoTag from "@/components/ui/DemoTag";
-import { getDeviceStatus } from "@/lib/store";
+import { getDeviceByQrSlug, markDeviceScanned } from "@/lib/deviceStore";
 import { usePatient } from "@/lib/patientStore";
 import { useLang } from "@/components/ui/LangProvider";
+import type { LinkedDevice } from "@/lib/types";
 
 export default function MedicalIdPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
   const router = useRouter();
   const { tr } = useLang();
   const [showDoctor, setShowDoctor] = useState(false);
-  const patient = usePatient(slug);
-  const device = devices.find((d) => d.slug === slug);
-  const isActive = device ? getDeviceStatus(device.id) === "active" : true;
+  const [device, setDevice] = useState<LinkedDevice | null>(null);
+  const [resolved, setResolved] = useState(false);
+
+  useEffect(() => {
+    const found = getDeviceByQrSlug(slug);
+    setDevice(found);
+    setResolved(true);
+    if (found?.status === "active") markDeviceScanned(slug);
+  }, [slug]);
+
+  // Backward compatibility: old /id/demo-001 and /id/demo-child-001 links still work.
+  const patientSlug = useMemo(() => device?.patientSlug ?? (slug.startsWith("demo-") ? slug : "__invalid__"), [device, slug]);
+  const patient = usePatient(patientSlug);
+  const isActive = device ? device.status === "active" : slug.startsWith("demo-");
+
+  if (!resolved && !slug.startsWith("demo-")) {
+    return <div className="min-h-screen bg-bone flex items-center justify-center text-muted">{tr("Loading Medical ID…", "جارٍ تحميل الهوية الطبية…")}</div>;
+  }
 
   if (!patient || !isActive) {
     return (
@@ -33,5 +48,5 @@ export default function MedicalIdPage({ params }: { params: Promise<{ slug: stri
 
   if (showDoctor) return <DoctorGate patient={patient} />;
 
-  return <EmergencyView patient={patient} deviceType={device?.type ?? "bracelet"} onRequestDoctor={() => setShowDoctor(true)} />;
+  return <EmergencyView patient={patient} device={device} scanId={device?.qrSlug ?? slug} onRequestDoctor={() => setShowDoctor(true)} />;
 }

@@ -4,6 +4,8 @@ import Link from "next/link";
 import { QrCode, Eye, Lock, Key, FileText, X, Smartphone, History, Baby, RotateCcw } from "lucide-react";
 import { resetDemo } from "@/lib/store";
 import { useLang } from "@/components/ui/LangProvider";
+import { resetDevices } from "@/lib/deviceStore";
+import { clearLocalFiles } from "@/lib/fileStore";
 
 export default function DemoPage() {
   const { tr } = useLang();
@@ -19,5 +21,5 @@ export default function DemoPage() {
     { icon: Baby, title: tr("Try child safety mode", "جرّب وضع الطفل"), desc: tr("Open the child profile for the guardian experience.", "افتح ملف الطفل لتجربة ولي الأمر.") },
   ];
 
-  return <div className="min-h-screen bg-bone max-w-md mx-auto px-5 pt-6 pb-12"><h1 className="text-2xl font-bold mb-2">{tr("Presentation Guide", "دليل العرض")}</h1><p className="text-sm text-muted mb-8">{tr("Follow these steps to demonstrate the product flow.", "اتبع هذه الخطوات لعرض تدفق المنتج.")}</p><div className="space-y-3 mb-8">{steps.map((step, i) => <div key={i} className="bg-white rounded-xl p-4 border hairline flex items-start gap-4"><div className="w-8 h-8 rounded-full bg-ink text-lime flex items-center justify-center text-sm font-bold shrink-0">{i + 1}</div><div><p className="font-bold text-sm">{step.title}</p><p className="text-xs text-muted mt-0.5 leading-relaxed">{step.desc}</p></div></div>)}</div><div className="space-y-3"><Link href="/"><button className="w-full min-h-[48px] rounded-2xl bg-ink text-bone font-bold text-sm">{tr("Back to demo start", "العودة لبداية التجربة")}</button></Link><button onClick={() => { resetDemo(); alert(tr("Demo data reset.", "تمت إعادة البيانات التجريبية.")); }} className="w-full min-h-[48px] rounded-2xl border-2 border-ink font-bold text-sm flex items-center justify-center gap-2"><RotateCcw size={16} /> {tr("Reset demo data", "إعادة بيانات التجربة")}</button></div></div>;
+  return <div className="min-h-screen bg-bone max-w-md mx-auto px-5 pt-6 pb-12"><h1 className="text-2xl font-bold mb-2">{tr("Presentation Guide", "دليل العرض")}</h1><p className="text-sm text-muted mb-8">{tr("Follow these steps to demonstrate the product flow.", "اتبع هذه الخطوات لعرض تدفق المنتج.")}</p><div className="space-y-3 mb-8">{steps.map((step, i) => <div key={i} className="bg-white rounded-xl p-4 border hairline flex items-start gap-4"><div className="w-8 h-8 rounded-full bg-ink text-lime flex items-center justify-center text-sm font-bold shrink-0">{i + 1}</div><div><p className="font-bold text-sm">{step.title}</p><p className="text-xs text-muted mt-0.5 leading-relaxed">{step.desc}</p></div></div>)}</div><div className="space-y-3"><Link href="/"><button className="w-full min-h-[48px] rounded-2xl bg-ink text-bone font-bold text-sm">{tr("Back to demo start", "العودة لبداية التجربة")}</button></Link><button onClick={async () => { resetDemo(); resetDevices(); await clearLocalFiles(); alert(tr("Demo data reset.", "تمت إعادة البيانات التجريبية.")); }} className="w-full min-h-[48px] rounded-2xl border-2 border-ink font-bold text-sm flex items-center justify-center gap-2"><RotateCcw size={16} /> {tr("Reset demo data", "إعادة بيانات التجربة")}</button></div></div>;
 }

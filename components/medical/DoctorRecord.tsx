@@ -9,6 +9,7 @@ import FreshnessChip from "@/components/ui/FreshnessChip";
 import Avatar from "@/components/ui/Avatar";
 import IdentityMark from "@/components/ui/IdentityMark";
 import { useLang } from "@/components/ui/LangProvider";
+import DocumentViewer from "@/components/documents/DocumentViewer";
 
 function Section({ title, icon, children, defaultOpen = true }: { title: string; icon: React.ReactNode; children: React.ReactNode; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -83,21 +84,7 @@ export default function DoctorRecord({ patient }: { patient: PatientProfile }) {
         <Section title={tr("Documents", "المستندات")} icon={<FolderOpen size={18} />}>{patient.documents.length === 0 ? <p className="text-sm text-muted py-2">{tr("No documents uploaded.", "لا توجد مستندات مرفوعة.")}</p> : patient.documents.map((d) => <button key={d.id} onClick={() => setShowDoc(d.id)} className="w-full flex items-center justify-between py-3 border-b hairline last:border-0 text-start"><div className="flex items-center gap-3"><FileText size={18} className="text-muted" /><div><p className="font-bold text-sm">{d.title}</p><p className="text-[11px] text-muted">{d.date} · {d.provider}</p></div></div><span className="text-[10px] font-bold uppercase text-aubergine">{tr("View", "عرض")}</span></button>)}</Section>
       </div>
 
-      {showDoc && (
-        <div className="fixed inset-0 z-[90] flex items-end justify-center">
-          <div className="absolute inset-0 bg-ink/60" onClick={() => setShowDoc(null)} />
-          <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} className="relative w-full max-w-lg bg-bone rounded-t-3xl p-6 pb-8">
-            <div className="w-10 h-1 rounded-full bg-muted/30 mx-auto mb-5" />
-            <h3 className="text-lg font-bold mb-4">{tr("Document Preview", "معاينة المستند")}</h3>
-            <div className="bg-white rounded-2xl border hairline p-6">
-              <div className="flex items-center gap-3 mb-4 pb-4 border-b hairline"><FileText size={24} className="text-aubergine" /><div><p className="font-bold text-sm">{patient.documents.find((d) => d.id === showDoc)?.title}</p><p className="text-xs text-muted">{patient.documents.find((d) => d.id === showDoc)?.provider}</p></div></div>
-              <div className="space-y-2"><div className="skeleton h-4 rounded w-full" /><div className="skeleton h-4 rounded w-5/6" /><div className="skeleton h-4 rounded w-4/6" /><div className="skeleton h-4 rounded w-full" /><div className="skeleton h-4 rounded w-3/6" /></div>
-              <p className="text-[11px] text-muted/60 mt-4 text-center">{tr("Simulated document — demo only", "مستند تجريبي للعرض فقط")}</p>
-            </div>
-            <button onClick={() => setShowDoc(null)} className="w-full mt-4 min-h-[48px] rounded-2xl bg-ink text-bone font-bold text-sm">{tr("Close", "إغلاق")}</button>
-          </motion.div>
-        </div>
-      )}
+      <DocumentViewer document={patient.documents.find((d) => d.id === showDoc) ?? null} onClose={() => setShowDoc(null)} />
     </div>
   );
 }

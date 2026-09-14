@@ -95,7 +95,7 @@ export default function MedicalEditorModal({ open, patient, editing = null, onCl
       const name = val("name").trim();
       const phone = val("phone").trim();
       if (!name || !phone) return;
-      const item = { id, name, relationship: val("relationship") || tr("Emergency contact", "جهة اتصال للطوارئ"), phone, visibility: "emergency" as const };
+      const item = { id, name, relationship: val("relationship") || tr("Emergency contact", "جهة اتصال للطوارئ"), phone, visibility };
       next.emergencyContacts = editing ? next.emergencyContacts.map((x) => x.id === id ? item : x) : [item, ...next.emergencyContacts];
     }
 
@@ -188,6 +188,10 @@ export default function MedicalEditorModal({ open, patient, editing = null, onCl
               <input type="checkbox" checked={(val("visibility") || "emergency") === "emergency"} onChange={(e) => set("visibility", e.target.checked ? "emergency" : "private")} className="w-5 h-5 accent-[#16171B]" />
             </label>
           </>}
+          {type === "contact" && <label className="flex items-center justify-between gap-4 bg-white border hairline rounded-xl p-4">
+            <div><p className="font-bold text-sm">{tr("Show contact in emergency profile", "إظهار جهة الاتصال في الطوارئ")}</p><p className="text-[11px] text-muted mt-0.5">{tr("Turn off to keep this contact private.", "أوقفه لإبقاء جهة الاتصال خاصة.")}</p></div>
+            <input type="checkbox" checked={(val("visibility") || "emergency") === "emergency"} onChange={(e) => set("visibility", e.target.checked ? "emergency" : "private")} className="w-5 h-5 accent-[#16171B]" />
+          </label>}
         </div>
 
         <div className="flex gap-2 mt-6">

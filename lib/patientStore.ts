@@ -32,6 +32,7 @@ function normalizePatient(patient: PatientProfile): PatientProfile {
     medications: patient.medications.map((item) => ({ ...item, visibility: item.visibility ?? "emergency" })),
     allergies: patient.allergies.map((item) => ({ ...item, visibility: item.visibility ?? "emergency" })),
     emergencyContacts: patient.emergencyContacts.map((item) => ({ ...item, visibility: item.visibility ?? "emergency" })),
+    documents: patient.documents.map((item) => ({ ...item, visibility: item.visibility ?? "private" })),
   };
 }
 

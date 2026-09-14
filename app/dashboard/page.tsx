@@ -8,10 +8,12 @@ import IdentityMark from "@/components/ui/IdentityMark";
 import { getActivity, getScans } from "@/lib/store";
 import { useActivePatient } from "@/lib/patientStore";
 import { useLang } from "@/components/ui/LangProvider";
+import { useDevices } from "@/lib/deviceStore";
 
 export default function DashboardHome() {
   const patient = useActivePatient();
   const { tr } = useLang();
+  const devices = useDevices();
   const [activity, setActivity] = useState<ReturnType<typeof getActivity>>([]);
   const [scans, setScans] = useState<ReturnType<typeof getScans>>([]);
 
@@ -81,7 +83,7 @@ export default function DashboardHome() {
         </div>
         <div className="bg-white rounded-2xl p-4 border hairline">
           <ShieldCheck size={18} className="text-aubergine mb-2" />
-          <p className="text-2xl font-bold">{patient.linkedIds}</p>
+          <p className="text-2xl font-bold">{devices.filter((d) => d.patientSlug === patient.slug).length}</p>
           <p className="text-[11px] text-muted">{tr("Linked IDs", "الأجهزة المرتبطة")}</p>
         </div>
       </div>

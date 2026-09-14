@@ -1,92 +1,122 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { Upload, FileText, Camera } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Upload, FileText, Camera, Eye, Trash2, Image as ImageIcon } from "lucide-react";
 import { useActivePatient, savePatient } from "@/lib/patientStore";
 import { addActivity } from "@/lib/store";
+import { deleteLocalFile, saveLocalFile } from "@/lib/fileStore";
 import { useLang } from "@/components/ui/LangProvider";
+import DocumentViewer from "@/components/documents/DocumentViewer";
+import type { PatientDocument } from "@/lib/types";
+
+const today = () => new Date().toISOString().slice(0, 10);
 
 export default function DocumentsPage() {
   const patient = useActivePatient();
   const { tr } = useLang();
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [extracting, setExtracting] = useState(false);
-  const [showExtract, setShowExtract] = useState(false);
-  const [fileName, setFileName] = useState("");
+  const cameraRef = useRef<HTMLInputElement | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [title, setTitle] = useState("");
+  const [provider, setProvider] = useState("");
+  const [date, setDate] = useState(today());
+  const [emergencyVisible, setEmergencyVisible] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [viewer, setViewer] = useState<PatientDocument | null>(null);
 
-  const handleUpload = (name = "demo-lab-report.pdf") => {
-    setFileName(name);
-    setUploading(true);
-    setTimeout(() => {
-      setUploading(false);
-      setExtracting(true);
-      setTimeout(() => {
-        setExtracting(false);
-        setShowExtract(true);
-      }, 700);
-    }, 500);
+  useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
+
+  const choose = (file: File) => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPendingFile(file);
+    setTitle(file.name.replace(/\.[^.]+$/, ""));
+    setProvider("");
+    setDate(today());
+    setEmergencyVisible(false);
+    setPreviewUrl(file.type.startsWith("image/") ? URL.createObjectURL(file) : null);
   };
 
-  const confirmExtract = () => {
+  const cancelPending = () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPendingFile(null); setPreviewUrl(null); setTitle(""); setProvider(""); setEmergencyVisible(false);
+    if (inputRef.current) inputRef.current.value = "";
+    if (cameraRef.current) cameraRef.current.value = "";
+  };
+
+  const saveDocument = async () => {
+    if (!patient || !pendingFile) return;
+    setSaving(true);
+    try {
+      const fileKey = await saveLocalFile(pendingFile);
+      const doc: PatientDocument = {
+        id: crypto.randomUUID(),
+        title: title.trim() || pendingFile.name,
+        date: date || today(),
+        provider: provider.trim() || tr("Patient upload", "رفع المريض"),
+        fileKey,
+        fileName: pendingFile.name,
+        mimeType: pendingFile.type || "application/octet-stream",
+        size: pendingFile.size,
+        visibility: emergencyVisible ? "emergency" : "private",
+      };
+      savePatient({ ...patient, documents: [doc, ...patient.documents] });
+      addActivity({ type: "update", title: "Document uploaded", detail: doc.title });
+      cancelPending();
+    } catch {
+      alert(tr("The file could not be saved in this browser.", "تعذر حفظ الملف على هذا المتصفح."));
+    } finally { setSaving(false); }
+  };
+
+
+  const toggleVisibility = (doc: PatientDocument) => {
     if (!patient) return;
-    const id = crypto.randomUUID();
-    const docId = crypto.randomUUID();
-    const next = {
-      ...patient,
-      labResults: [{ id, testName: "HbA1c", value: "7.2", unit: "%", status: "abnormal" as const, date: "03 Sep 2026", lab: "Example Medical Lab", documentId: docId }, ...patient.labResults],
-      documents: [{ id: docId, title: fileName || "HbA1c Lab Report", date: "03 Sep 2026", provider: "Example Medical Lab" }, ...patient.documents],
-    };
-    savePatient(next);
-    addActivity({ type: "update", title: "Document confirmed", detail: fileName || "HbA1c Lab Report" });
-    setShowExtract(false);
+    const nextVisibility = doc.visibility === "emergency" ? "private" : "emergency";
+    savePatient({ ...patient, documents: patient.documents.map((d) => d.id === doc.id ? { ...d, visibility: nextVisibility } : d) });
+    addActivity({ type: "update", title: "Document visibility updated", detail: `${doc.title} · ${nextVisibility}` });
+  };
+
+  const removeDocument = async (doc: PatientDocument) => {
+    if (!patient || !confirm(tr("Delete this document?", "هل تريد حذف هذا المستند؟"))) return;
+    if (doc.fileKey) { try { await deleteLocalFile(doc.fileKey); } catch {} }
+    savePatient({ ...patient, documents: patient.documents.filter((d) => d.id !== doc.id) });
+    addActivity({ type: "update", title: "Document deleted", detail: doc.title });
   };
 
   if (!patient) return <div className="max-w-md mx-auto px-5 pt-8 text-muted">{tr("Loading documents…", "جارٍ تحميل المستندات…")}</div>;
 
   return (
-    <div className="max-w-md mx-auto px-5 pt-6">
-      <h1 className="text-2xl font-bold mb-2">{tr("Documents", "المستندات")}</h1>
-      <p className="text-sm text-muted mb-6">{tr("Upload medical documents. AI extraction is simulated in this demo and nothing is saved until you confirm.", "ارفع المستندات الطبية. الاستخراج بالذكاء الاصطناعي تجريبي هنا، ولن يتم حفظ أي معلومة قبل تأكيدك.")}</p>
+    <div className="max-w-md mx-auto px-5 pt-6 pb-8">
+      <h1 className="text-2xl font-bold mb-2">{tr("Documents & Images", "المستندات والصور")}</h1>
+      <p className="text-sm text-muted mb-6">{tr("Upload PDFs or images, keep the real file, preview it later, and choose whether its title can appear on an emergency QR.", "ارفع ملفات PDF أو صورًا، واحتفظ بالملف الحقيقي لمعاينته لاحقًا، واختر ما إذا كان مسموحًا بإظهار عنوانه في QR الطوارئ.")}</p>
 
-      <div className="bg-white rounded-2xl border-2 border-dashed border-muted/30 p-8 text-center mb-6">
+      <div className="bg-white rounded-2xl border-2 border-dashed border-muted/30 p-7 text-center mb-6">
         <Upload size={32} className="text-muted/50 mx-auto mb-3" />
-        <p className="font-bold mb-1">{tr("Upload Medical Document", "رفع مستند طبي")}</p>
-        <p className="text-xs text-muted mb-4">{tr("Lab report, radiology, prescription, or hospital report", "تحليل أو أشعة أو روشتة أو تقرير مستشفى")}</p>
-        <input ref={inputRef} type="file" className="hidden" accept="image/*,.pdf" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleUpload(file.name); }} />
-        <div className="flex gap-2 justify-center">
-          <button onClick={() => inputRef.current?.click()} disabled={uploading || extracting} className="min-h-[44px] px-5 rounded-xl bg-ink text-bone text-xs font-bold flex items-center gap-2 disabled:opacity-50">
-            <Upload size={14} />{uploading ? tr("Uploading…", "جارٍ الرفع…") : extracting ? tr("Processing…", "جارٍ التحليل…") : tr("Choose file", "اختيار ملف")}
-          </button>
-          <button onClick={() => handleUpload("camera-capture.jpg")} disabled={uploading || extracting} className="min-h-[44px] px-5 rounded-xl border-2 border-ink text-xs font-bold flex items-center gap-2 disabled:opacity-50"><Camera size={14} /> {tr("Take photo", "التقاط صورة")}</button>
-        </div>
+        <p className="font-bold mb-1">{tr("Add a medical file", "إضافة ملف طبي")}</p>
+        <p className="text-xs text-muted mb-4">{tr("PDF, lab report, radiology image, prescription or phone photo", "PDF أو تحليل أو صورة أشعة أو روشتة أو صورة من الهاتف")}</p>
+        <input ref={inputRef} type="file" className="hidden" accept="image/*,.pdf,application/pdf" onChange={(e) => { const file = e.target.files?.[0]; if (file) choose(file); }} />
+        <input ref={cameraRef} type="file" className="hidden" accept="image/*" capture="environment" onChange={(e) => { const file = e.target.files?.[0]; if (file) choose(file); }} />
+        <div className="grid grid-cols-2 gap-2"><button onClick={() => inputRef.current?.click()} className="min-h-[44px] rounded-xl bg-ink text-bone text-xs font-bold flex items-center justify-center gap-2"><Upload size={14} />{tr("Choose file", "اختيار ملف")}</button><button onClick={() => cameraRef.current?.click()} className="min-h-[44px] rounded-xl border-2 border-ink text-xs font-bold flex items-center justify-center gap-2"><Camera size={14} /> {tr("Take photo", "التقاط صورة")}</button></div>
       </div>
 
-      {showExtract && (
-        <div className="bg-lime/10 border border-lime/30 rounded-2xl p-5 mb-6">
-          <p className="text-sm font-bold mb-3">{tr("We found the following information:", "تم العثور على البيانات التالية:")}</p>
-          <div className="space-y-2 mb-4">
-            <div className="flex justify-between text-sm"><span className="text-muted">{tr("Test", "التحليل")}</span><span className="font-bold">HbA1c</span></div>
-            <div className="flex justify-between text-sm"><span className="text-muted">{tr("Value", "النتيجة")}</span><span className="font-bold">7.2%</span></div>
-            <div className="flex justify-between text-sm"><span className="text-muted">{tr("Date", "التاريخ")}</span><span className="font-bold">3 September 2026</span></div>
-            <div className="flex justify-between text-sm"><span className="text-muted">{tr("Laboratory", "المعمل")}</span><span className="font-bold">Example Medical Lab</span></div>
-          </div>
-          <div className="flex gap-2">
-            <button onClick={confirmExtract} className="flex-1 min-h-[40px] rounded-xl bg-ink text-bone text-xs font-bold">{tr("CONFIRM", "تأكيد")}</button>
-            <button className="flex-1 min-h-[40px] rounded-xl border-2 border-ink text-xs font-bold">{tr("EDIT", "تعديل")}</button>
-            <button onClick={() => setShowExtract(false)} className="flex-1 min-h-[40px] rounded-xl text-xs font-bold text-muted">{tr("IGNORE", "تجاهل")}</button>
-          </div>
-          <p className="text-[10px] text-muted/60 mt-3">{tr("AI helps organize information. It does not diagnose or replace medical review.", "يساعد الذكاء الاصطناعي في تنظيم المعلومات ولا يقوم بالتشخيص ولا يستبدل المراجعة الطبية.")}</p>
-        </div>
-      )}
+      {pendingFile && <div className="bg-white rounded-2xl border hairline p-5 mb-6">
+        <div className="flex items-center gap-3 mb-4">{pendingFile.type.startsWith("image/") ? <ImageIcon size={22} className="text-aubergine"/> : <FileText size={22} className="text-aubergine"/>}<div className="min-w-0"><p className="font-bold text-sm truncate">{pendingFile.name}</p><p className="text-[11px] text-muted">{Math.max(1, Math.round(pendingFile.size / 1024))} KB</p></div></div>
+        {previewUrl && <img src={previewUrl} alt="Upload preview" className="w-full max-h-64 object-contain rounded-xl bg-surface mb-4"/>}
+        <div className="space-y-3"><label className="block"><span className="text-[11px] uppercase tracking-wide text-muted font-bold">{tr("Title", "العنوان")}</span><input value={title} onChange={(e) => setTitle(e.target.value)} className="w-full mt-1 min-h-[44px] rounded-xl border-2 border-ink/15 px-3"/></label><label className="block"><span className="text-[11px] uppercase tracking-wide text-muted font-bold">{tr("Provider / source", "الجهة / المصدر")}</span><input value={provider} onChange={(e) => setProvider(e.target.value)} placeholder={tr("Hospital, lab, clinic…", "مستشفى، معمل، عيادة…")} className="w-full mt-1 min-h-[44px] rounded-xl border-2 border-ink/15 px-3"/></label><label className="block"><span className="text-[11px] uppercase tracking-wide text-muted font-bold">{tr("Date", "التاريخ")}</span><input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full mt-1 min-h-[44px] rounded-xl border-2 border-ink/15 px-3"/></label><label className="flex items-center justify-between gap-4 bg-bone rounded-xl p-4"><div><p className="font-bold text-sm">{tr("Emergency-visible", "يظهر في الطوارئ")}</p><p className="text-[11px] text-muted">{tr("Only the document title/metadata appears publicly; the private file itself stays in the protected record.", "يظهر عنوان المستند وبياناته فقط بشكل عام، أما الملف نفسه فيظل داخل السجل المحمي.")}</p></div><input type="checkbox" checked={emergencyVisible} onChange={(e) => setEmergencyVisible(e.target.checked)} className="w-5 h-5 accent-[#16171B]"/></label></div>
+        <div className="grid grid-cols-2 gap-2 mt-5"><button onClick={cancelPending} className="min-h-[46px] rounded-xl border-2 border-ink font-bold text-xs">{tr("Cancel", "إلغاء")}</button><button onClick={saveDocument} disabled={saving} className="min-h-[46px] rounded-xl bg-ink text-bone font-bold text-xs disabled:opacity-50">{saving ? tr("Saving…", "جارٍ الحفظ…") : tr("Save document", "حفظ المستند")}</button></div>
+      </div>}
 
-      <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted mb-3">{tr("Existing documents", "المستندات الحالية")}</h2>
+      <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted mb-3">{tr("Saved documents", "المستندات المحفوظة")}</h2>
       {patient.documents.length === 0 ? <div className="bg-white/50 rounded-xl border border-dashed hairline p-4 text-sm text-muted">{tr("No documents uploaded yet.", "لم يتم رفع مستندات بعد.")}</div> : patient.documents.map((doc) => (
         <div key={doc.id} className="bg-white rounded-xl p-4 border hairline mb-2 flex items-center gap-3">
-          <FileText size={20} className="text-aubergine shrink-0" />
-          <div className="flex-1 min-w-0"><p className="font-bold text-sm truncate">{doc.title}</p><p className="text-[11px] text-muted">{doc.date} · {doc.provider}</p></div>
+          {doc.mimeType?.startsWith("image/") ? <ImageIcon size={20} className="text-aubergine shrink-0"/> : <FileText size={20} className="text-aubergine shrink-0" />}
+          <div className="flex-1 min-w-0"><p className="font-bold text-sm truncate">{doc.title}</p><p className="text-[11px] text-muted">{doc.date} · {doc.provider}</p><button onClick={() => toggleVisibility(doc)} className={`text-[10px] mt-1 font-bold ${doc.visibility === "emergency" ? "text-lime" : "text-aubergine"}`}>{doc.visibility === "emergency" ? tr("Emergency metadata visible · tap to make private", "بياناته ظاهرة في الطوارئ · اضغط لجعله خاصًا") : tr("Private · tap to share metadata in emergency", "خاص · اضغط لإظهار بياناته في الطوارئ")}</button></div>
+          <button onClick={() => setViewer(doc)} className="w-9 h-9 rounded-lg bg-aubergine/10 text-aubergine flex items-center justify-center" aria-label="View"><Eye size={16}/></button>
+          <button onClick={() => removeDocument(doc)} className="w-9 h-9 rounded-lg bg-coral/10 text-coral flex items-center justify-center" aria-label="Delete"><Trash2 size={16}/></button>
         </div>
       ))}
+
+      <DocumentViewer document={viewer} onClose={() => setViewer(null)} />
     </div>
   );
 }

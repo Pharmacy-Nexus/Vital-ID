@@ -9,16 +9,20 @@ import IdentityMark from "@/components/ui/IdentityMark";
 import { LangToggle, useLang } from "@/components/ui/LangProvider";
 import DemoTag from "@/components/ui/DemoTag";
 import { useActivePatient } from "@/lib/patientStore";
+import { useDevices } from "@/lib/deviceStore";
 
 export default function Home() {
   const { tr } = useLang();
   const patient = useActivePatient();
+  const devices = useDevices();
   const [url, setUrl] = useState("");
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    setUrl(`${window.location.origin}/id/demo-001`);
-  }, []);
+    if (!patient) return;
+    const primary = devices.find((d) => d.patientSlug === patient.slug && d.status === "active");
+    setUrl(`${window.location.origin}/id/${primary?.qrSlug ?? patient.slug}`);
+  }, [devices, patient]);
 
   const copyLink = async () => {
     await navigator.clipboard.writeText(url);
@@ -66,7 +70,7 @@ export default function Home() {
                 {tr("Scan the QR code as if you found this medical ID during an emergency.", "امسح رمز QR كما لو أنك وجدت هذه الهوية الطبية في حالة طوارئ.")}
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
-                <Link href="/id/demo-001" className="flex-1">
+                <Link href={url ? new URL(url).pathname : "/id/demo-001"} className="flex-1">
                   <button className="w-full min-h-[48px] rounded-2xl bg-coral text-white font-bold text-sm flex items-center justify-center gap-2">
                     <Smartphone size={18} />
                     {tr("Open emergency ID", "افتح هوية الطوارئ")}
@@ -87,9 +91,9 @@ export default function Home() {
         {/* Action cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { href: "/id/demo-001", icon: <Zap size={20} />, label: tr("Emergency Demo", "تجربة الطوارئ"), desc: tr("Scan & view", "مسح وعرض") },
+            { href: url ? new URL(url).pathname : "/id/demo-001", icon: <Zap size={20} />, label: tr("Emergency Demo", "تجربة الطوارئ"), desc: tr("Scan & view", "مسح وعرض") },
             { href: "/dashboard", icon: <User size={20} />, label: tr("Patient Dashboard", "لوحة المريض"), desc: tr("Owner view", "واجهة المالك") },
-            { href: "/id/demo-child-001", icon: <Baby size={20} />, label: tr("Child Safety", "أمان الطفل"), desc: tr("Guardian mode", "وضع ولي الأمر") },
+            { href: "/id/qr-child-bag-demo-001", icon: <Baby size={20} />, label: tr("Child Safety", "أمان الطفل"), desc: tr("Guardian mode", "وضع ولي الأمر") },
             { href: "/activate", icon: <Smartphone size={20} />, label: tr("Activation", "التفعيل"), desc: tr("New device setup", "إعداد هوية جديدة") },
           ].map((card, i) => (
             <motion.div key={card.href} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.05 }}>
