@@ -5,7 +5,10 @@
 :root { color-scheme: light; }
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; background: #F5F1E8; color: #16171B; }
-body { font-family: Arial, sans-serif; }
+body { font-family: "Segoe UI", Tahoma, Arial, sans-serif; }
+html[dir="rtl"] body { font-family: Tahoma, "Segoe UI", Arial, sans-serif; }
+html[dir="rtl"] .text-left { text-align: right; }
+html[dir="rtl"] .text-right { text-align: left; }
 button, input { font: inherit; }
 .hairline { border-color: rgba(22,23,27,.12); }
 .pb-safe { padding-bottom: env(safe-area-inset-bottom); }

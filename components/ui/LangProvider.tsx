@@ -1,7 +1,55 @@
 "use client";
-import { createContext,useContext,useState } from "react";
-const dict={en:{tagline:"Your medical identity, ready in an emergency.",openEmergency:"Open emergency ID",copyLink:"Copy link"},ar:{tagline:"هويتك الطبية جاهزة وقت الطوارئ.",openEmergency:"افتح هوية الطوارئ",copyLink:"انسخ الرابط"}};
-const C=createContext({lang:"en" as "en"|"ar",setLang:(_l:"en"|"ar")=>{},t:dict.en});
-export function LangProvider({children}:{children:React.ReactNode}){const [lang,setLang]=useState<"en"|"ar">("en"); return <C.Provider value={{lang,setLang,t:dict[lang]}}><div dir={lang==="ar"?"rtl":"ltr"}>{children}</div></C.Provider>}
-export const useLang=()=>useContext(C);
-export function LangToggle(){const {lang,setLang}=useLang(); return <button onClick={()=>setLang(lang==="en"?"ar":"en")} className="text-xs font-bold underline underline-offset-4">{lang==="en"?"العربية":"English"}</button>}
+
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+
+type Language = "en" | "ar";
+type LangContextValue = {
+  lang: Language;
+  setLang: (lang: Language) => void;
+  tr: (en: string, ar: string) => string;
+};
+
+const KEY = "vital-id-language";
+const C = createContext<LangContextValue>({
+  lang: "en",
+  setLang: () => {},
+  tr: (en) => en,
+});
+
+export function LangProvider({ children }: { children: React.ReactNode }) {
+  const [lang, setLangState] = useState<Language>("en");
+
+  useEffect(() => {
+    const saved = localStorage.getItem(KEY);
+    if (saved === "ar" || saved === "en") setLangState(saved);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+    localStorage.setItem(KEY, lang);
+  }, [lang]);
+
+  const value = useMemo<LangContextValue>(() => ({
+    lang,
+    setLang: setLangState,
+    tr: (en, ar) => (lang === "ar" ? ar : en),
+  }), [lang]);
+
+  return <C.Provider value={value}>{children}</C.Provider>;
+}
+
+export const useLang = () => useContext(C);
+
+export function LangToggle({ className = "" }: { className?: string }) {
+  const { lang, setLang } = useLang();
+  return (
+    <button
+      type="button"
+      onClick={() => setLang(lang === "en" ? "ar" : "en")}
+      className={`text-xs font-bold underline underline-offset-4 ${className}`}
+    >
+      {lang === "en" ? "العربية" : "English"}
+    </button>
+  );
+}
