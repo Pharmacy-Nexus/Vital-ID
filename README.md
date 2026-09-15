@@ -58,3 +58,6 @@ The browser still keeps a local cache for offline/demo behavior. Supabase is the
 - The medical document bucket is private. The owner reads files through authenticated Storage access; an authorized clinician gets a short-lived signed URL.
 - The fixed clinician OTP is **demo-only**. Do not use it with real patient data.
 - This remains a prototype. Do not store real patient health information until privacy, consent, security testing, legal requirements, retention, audit controls and production authentication have been reviewed.
+
+## Homepage refresh (v4.1)
+The `/` route is now a customer-facing VITAL ID landing page using the provided black/white NFC card artwork. Existing dashboard, emergency, clinician, activation, login and Supabase/cloud flows are unchanged.

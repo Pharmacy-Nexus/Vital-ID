@@ -3,7 +3,7 @@ import { LangProvider } from "@/components/ui/LangProvider";
 
 export const metadata = {
   title: "VITAL ID",
-  description: "Demo personal medical identity",
+  description: "VITAL ID — NFC + QR personal medical identity for emergency access and protected medical records.",
   manifest: "/manifest.webmanifest",
 };
 
