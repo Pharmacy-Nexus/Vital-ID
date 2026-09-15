@@ -1,3 +1,5 @@
+# VITAL ID — Editorial Homepage v4.2
+
 # VITAL ID Functional Demo v4 — Cloud Sync
 
 This version moves the important shared state from a one-browser demo toward a real multi-device prototype using Supabase.
