@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
+import { useState } from "react";
 import { LangToggle, useLang } from "@/components/ui/LangProvider";
 
 const rise = {
@@ -26,6 +27,96 @@ function SectionIndex({ n, label }: { n: string; label: string }) {
 
 export default function Home() {
   const { tr, lang } = useLang();
+  const [selectedProduct, setSelectedProduct] = useState("card-black");
+
+  const products = [
+    {
+      id: "card-black",
+      index: "01",
+      name: tr("VITAL ID Card", "كارت VITAL ID"),
+      variant: tr("Black / everyday carry", "أسود / للاستخدام اليومي"),
+      image: "/brand/vital-card-black-front.png",
+      imageWidth: 1448,
+      imageHeight: 1086,
+      title: tr("DISCREET. READY. ALWAYS WITH YOU.", "هادئ في شكله. جاهز وقت الحاجة."),
+      description: tr(
+        "A wallet-size medical identity for adults who want something discreet. Tap with NFC or scan the QR to open the same live emergency profile.",
+        "هوية طبية بحجم كارت المحفظة للكبار اللي عايزين شكل هادي وعملي. لمسة NFC أو مسح QR يفتح نفس ملف الطوارئ المحدث."
+      ),
+      bestFor: [tr("Adults", "الكبار"), tr("Everyday carry", "الاستخدام اليومي"), tr("Travel", "السفر")],
+      features: [
+        tr("NFC + QR access", "وصول بـ NFC + QR"),
+        tr("Fits a standard wallet", "مقاس مناسب للمحفظة"),
+        tr("Linked to your live medical identity", "مرتبط بهويتك الطبية المحدثة")
+      ],
+      tone: "black"
+    },
+    {
+      id: "card-white",
+      index: "02",
+      name: tr("VITAL ID Card", "كارت VITAL ID"),
+      variant: tr("White / high visibility", "أبيض / وضوح أعلى"),
+      image: "/brand/vital-card-white-back.png",
+      imageWidth: 1448,
+      imageHeight: 1086,
+      title: tr("BUILT TO BE NOTICED IN AN EMERGENCY.", "واضح من أول نظرة وقت الطوارئ."),
+      description: tr(
+        "The high-visibility version puts the emergency purpose, NFC cue and QR front and center — useful when speed and clarity matter more than discretion.",
+        "النسخة الأكثر وضوحًا بتبرز وظيفة الطوارئ وإشارة NFC والـQR من أول نظرة — لما السرعة والوضوح أهم من الشكل الهادئ."
+      ),
+      bestFor: [tr("Emergency visibility", "وضوح الطوارئ"), tr("Older adults", "كبار السن"), tr("Caregivers", "مقدمي الرعاية")],
+      features: [
+        tr("Clear emergency labeling", "تعريف واضح للطوارئ"),
+        tr("NFC + QR access", "وصول بـ NFC + QR"),
+        tr("Same secure medical identity", "نفس الهوية الطبية الآمنة")
+      ],
+      tone: "white"
+    },
+    {
+      id: "wristband-black",
+      index: "03",
+      name: tr("VITAL ID Wristband", "سوار VITAL ID"),
+      variant: tr("Black / always-on wearable", "أسود / قابل للارتداء طوال الوقت"),
+      image: "/brand/vital-wristband-black.png",
+      imageWidth: 1254,
+      imageHeight: 1254,
+      title: tr("ON YOUR WRIST. NOT LEFT IN A WALLET.", "على إيدك. مش متنسي في محفظة."),
+      description: tr(
+        "A wearable option for people who benefit from having their medical ID physically visible and easy to reach. The QR remains a fallback when NFC is not used.",
+        "اختيار قابل للارتداء للي محتاجين هويتهم الطبية تكون ظاهرة وسهلة الوصول. والـQR يفضل وسيلة بديلة لو NFC مش مستخدم."
+      ),
+      bestFor: [tr("Chronic conditions", "الحالات المزمنة"), tr("Older adults", "كبار السن"), tr("Active days", "الحركة اليومية")],
+      features: [
+        tr("Wearable medical ID", "هوية طبية قابلة للارتداء"),
+        tr("NFC + visible QR", "NFC + QR ظاهر"),
+        tr("Connects to the same profile as your card", "يرتبط بنفس ملف الكارت")
+      ],
+      tone: "black"
+    },
+    {
+      id: "wristband-kids",
+      index: "04",
+      name: tr("VITAL ID Kids Wristband", "سوار VITAL ID للأطفال"),
+      variant: tr("White + green / friendly visibility", "أبيض وأخضر / واضح ومريح بصريًا"),
+      image: "/brand/vital-wristband-kids.png",
+      imageWidth: 1254,
+      imageHeight: 1254,
+      title: tr("MADE TO SPEAK WHEN A CHILD CAN'T EXPLAIN.", "بيتكلم بدل الطفل لما مايعرفش يشرح."),
+      description: tr(
+        "A child-friendly wearable concept for allergies, chronic conditions, school days and outings. A guardian controls the medical profile and decides what is public in an emergency.",
+        "تصميم مناسب للأطفال للحساسية، الحالات المزمنة، المدرسة والخروجات. ولي الأمر هو اللي يدير الملف ويحدد إيه يظهر وقت الطوارئ."
+      ),
+      bestFor: [tr("Children", "الأطفال"), tr("Severe allergies", "الحساسية الشديدة"), tr("School & outings", "المدرسة والخروجات")],
+      features: [
+        tr("Guardian-managed profile", "ملف يديره ولي الأمر"),
+        tr("NFC + visible QR", "NFC + QR ظاهر"),
+        tr("Emergency information by choice", "بيانات الطوارئ حسب اختيار الأسرة")
+      ],
+      tone: "kids"
+    }
+  ];
+
+  const activeProduct = products.find((product) => product.id === selectedProduct) ?? products[0];
 
   return (
     <main className="editorial-home">
@@ -285,16 +376,111 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="product-gallery">
-            <figure className="product-figure product-black">
-              <Image src="/brand/vital-card-black-front.png" width={1448} height={1086} alt="Black VITAL ID card front" />
-              <figcaption><span>01</span><span>{tr("BLACK / FRONT", "أسود / أمامي")}</span></figcaption>
-            </figure>
-            <figure className="product-figure product-white">
-              <Image src="/brand/vital-card-white-back.png" width={1448} height={1086} alt="White VITAL ID card back with QR" />
-              <figcaption><span>02</span><span>{tr("WHITE / EMERGENCY", "أبيض / طوارئ")}</span></figcaption>
-            </figure>
+          <div className="product-instruction">
+            <span>{tr("SELECT AN OBJECT", "اختار المنتج")}</span>
+            <span>{tr("Tap any product to open its story", "اضغط على أي منتج عشان تشوف فكرته واستخدامه")}</span>
           </div>
+
+          <div className="product-selector" role="tablist" aria-label={tr("VITAL ID products", "منتجات VITAL ID")}>
+            {products.map((product) => {
+              const active = product.id === selectedProduct;
+              return (
+                <motion.button
+                  key={product.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setSelectedProduct(product.id)}
+                  className={`product-option ${active ? "is-active" : ""}`}
+                  whileHover={{ y: -4 }}
+                  whileTap={{ scale: 0.99 }}
+                  transition={{ duration: 0.22 }}
+                >
+                  <div className="product-option-top">
+                    <span>{product.index}</span>
+                    <span>{active ? tr("OPEN", "مفتوح") : tr("EXPLORE", "اعرف أكتر")}</span>
+                  </div>
+                  <div className={`product-option-image product-option-${product.tone}`}>
+                    <Image
+                      src={product.image}
+                      width={product.imageWidth}
+                      height={product.imageHeight}
+                      alt={`${product.name} — ${product.variant}`}
+                    />
+                  </div>
+                  <div className="product-option-bottom">
+                    <strong>{product.name}</strong>
+                    <span>{product.variant}</span>
+                  </div>
+                </motion.button>
+              );
+            })}
+          </div>
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeProduct.id}
+              className={`product-detail product-detail-${activeProduct.tone}`}
+              initial={{ opacity: 0, y: 28 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -18 }}
+              transition={{ duration: 0.42, ease: [0.2, 0.75, 0.2, 1] }}
+            >
+              <div className="product-detail-visual">
+                <motion.div
+                  className="product-detail-image-wrap"
+                  initial={{ scale: 0.94, rotate: activeProduct.id.includes("wristband") ? -2 : -1 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ duration: 0.55, ease: [0.2, 0.75, 0.2, 1] }}
+                >
+                  <Image
+                    src={activeProduct.image}
+                    width={activeProduct.imageWidth}
+                    height={activeProduct.imageHeight}
+                    alt={`${activeProduct.name} — ${activeProduct.variant}`}
+                  />
+                </motion.div>
+                <div className="product-detail-number">VITAL / {activeProduct.index}</div>
+              </div>
+
+              <div className="product-detail-copy">
+                <div className="product-detail-heading">
+                  <div>
+                    <span className="product-detail-kicker">{activeProduct.name}</span>
+                    <h3>{activeProduct.title}</h3>
+                  </div>
+                  <span className="product-detail-variant">{activeProduct.variant}</span>
+                </div>
+
+                <p className="product-detail-description">{activeProduct.description}</p>
+
+                <div className="product-detail-columns">
+                  <div className="product-detail-list">
+                    <span className="product-detail-label">{tr("WHAT IT DOES", "بيعمل إيه")}</span>
+                    <ul>
+                      {activeProduct.features.map((feature) => <li key={feature}>{feature}</li>)}
+                    </ul>
+                  </div>
+                  <div className="product-detail-best">
+                    <span className="product-detail-label">{tr("BEST FOR", "أنسب لـ")}</span>
+                    <div className="product-tags">
+                      {activeProduct.bestFor.map((item) => <span key={item}>{item}</span>)}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="product-detail-actions">
+                  <Link href="/activate" className="product-detail-cta">
+                    {tr("GET VITAL ID", "ابدأ مع VITAL ID")}
+                    <ArrowUpRight size={17} strokeWidth={1.7} />
+                  </Link>
+                  <span className="product-detail-note">
+                    {tr("One medical identity. Multiple devices can share it.", "هوية طبية واحدة، وممكن تربط بيها أكتر من جهاز.")}
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
         </div>
       </section>
 

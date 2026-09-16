@@ -63,3 +63,11 @@ The browser still keeps a local cache for offline/demo behavior. Supabase is the
 
 ## Homepage refresh (v4.1)
 The `/` route is now a customer-facing VITAL ID landing page using the provided black/white NFC card artwork. Existing dashboard, emergency, clinician, activation, login and Supabase/cloud flows are unchanged.
+
+
+## v4.3 — Interactive product objects
+- Added Black VITAL ID Wristband and Kids White/Green Wristband assets.
+- Rebuilt the Objects section as an interactive product selector.
+- Clicking any card/wristband opens an animated editorial detail panel with use cases and key functions.
+- Added mobile horizontal swipe selector and responsive product detail layout.
+- No backend, Supabase, QR, dashboard, OTP, or cloud logic changed.
