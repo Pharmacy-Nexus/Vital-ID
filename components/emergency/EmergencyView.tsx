@@ -8,6 +8,7 @@ import IdentityMark from "@/components/ui/IdentityMark";
 import DemoTag from "@/components/ui/DemoTag";
 import { LangToggle, useLang } from "@/components/ui/LangProvider";
 import SourceBadge from "@/components/ui/SourceBadge";
+import ProfilePhoto from "@/components/ui/ProfilePhoto";
 
 const fallbackDisplay = {
   basicInfo: true,
@@ -68,8 +69,13 @@ export default function EmergencyView({ patient, device, scanId, remote = false,
             <LangToggle className="text-bone" />
           </div>
           <div className="flex items-start justify-between gap-3">
-            {display.basicInfo ? <div><h1 className="text-2xl font-bold">{patient.firstName} {patient.lastName}</h1><p className="text-sm text-bone/60 mt-1">{tr("Age", "العمر")} {patient.age > 0 ? patient.age : tr("Unknown", "غير معروف")}</p></div> : <div><h1 className="text-xl font-bold">VITAL ID</h1><p className="text-sm text-bone/50">{tr("Limited emergency view", "عرض طوارئ محدود")}</p></div>}
-            <IdentityMark id={scanId ?? patient.slug} className="text-lime" barClass="bg-lime" />
+            <div className="flex items-center gap-3 min-w-0">
+              {display.basicInfo && patient.photoEmergencyVisible && (patient.photoUrl || patient.photoFileKey) && (
+                <ProfilePhoto patient={patient} size={62} showRing={false} className="ring-1 ring-bone/20" />
+              )}
+              {display.basicInfo ? <div className="min-w-0"><h1 className="text-2xl font-bold truncate">{patient.firstName} {patient.lastName}</h1><p className="text-sm text-bone/60 mt-1">{tr("Age", "العمر")} {patient.age > 0 ? patient.age : tr("Unknown", "غير معروف")}</p></div> : <div><h1 className="text-xl font-bold">VITAL ID</h1><p className="text-sm text-bone/50">{tr("Limited emergency view", "عرض طوارئ محدود")}</p></div>}
+            </div>
+            <IdentityMark id={scanId ?? patient.slug} className="text-lime shrink-0" barClass="bg-lime" />
           </div>
         </div>
       </header>

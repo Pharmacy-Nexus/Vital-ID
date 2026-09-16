@@ -36,6 +36,12 @@ export async function POST(request: Request) {
 
   const expiresAt = Date.now() + 20 * 60 * 1000;
   const token = signClinicianToken({ qrSlug, patientId: deviceRow.patient_id, exp: expiresAt });
+  const patient = patientRow.data as PatientProfile;
+  if (patient.photoFileKey?.startsWith("cloud:")) {
+    const path = patient.photoFileKey.slice("cloud:".length);
+    const { data: signed } = await supabase.storage.from("medical-documents").createSignedUrl(path, 1200);
+    if (signed?.signedUrl) patient.photoUrl = signed.signedUrl;
+  }
 
   await supabase.from("activity_logs").insert({
     owner_id: deviceRow.owner_id,
@@ -49,6 +55,6 @@ export async function POST(request: Request) {
   return NextResponse.json({
     token,
     expiresAt,
-    patient: patientRow.data as PatientProfile,
+    patient,
   });
 }

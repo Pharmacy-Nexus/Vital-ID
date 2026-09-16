@@ -29,7 +29,14 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
   if (patientError || !patientRow) return NextResponse.json({ error: "patient_not_found" }, { status: 404 });
 
   const device = sanitizeDeviceForPublic(deviceRow.data as LinkedDevice);
-  const patient = buildEmergencyPatient(patientRow.data as PatientProfile, device);
+  const sourcePatient = patientRow.data as PatientProfile;
+  const patient = buildEmergencyPatient(sourcePatient, device);
+
+  if (sourcePatient.photoEmergencyVisible && device.display.basicInfo && sourcePatient.photoFileKey?.startsWith("cloud:")) {
+    const path = sourcePatient.photoFileKey.slice("cloud:".length);
+    const { data: signed } = await supabase.storage.from("medical-documents").createSignedUrl(path, 300);
+    if (signed?.signedUrl) patient.photoUrl = signed.signedUrl;
+  }
 
   return NextResponse.json(
     { patient, device },

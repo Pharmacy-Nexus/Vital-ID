@@ -96,6 +96,10 @@ export type PatientProfile = {
   bloodType: string;
   bloodTypeSource?: SourceType;
   photoColor: string;
+  photoFileKey?: string;
+  photoFileName?: string;
+  photoEmergencyVisible?: boolean;
+  photoUrl?: string;
   emergencyProfile: { completeness: number };
   recordCompleteness: number;
   lastConfirmation: string;

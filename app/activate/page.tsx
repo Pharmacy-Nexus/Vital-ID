@@ -40,6 +40,23 @@ const initialForm: FormState = {
   condition: "",
 };
 
+
+function ActivationField({ label, value, placeholder, type = "text", onChange }: { label: string; value: string; placeholder: string; type?: string; onChange: (value: string) => void }) {
+  return (
+    <div>
+      <label className="text-xs font-bold uppercase tracking-wide text-muted">{label}</label>
+      <input
+        type={type}
+        dir={type === "date" ? undefined : "auto"}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full mt-1.5 min-h-[52px] px-4 rounded-2xl border-2 border-ink/15 bg-white text-base focus:border-coral focus:outline-none"
+      />
+    </div>
+  );
+}
+
 function calculateAge(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return 0;
@@ -135,13 +152,6 @@ export default function ActivatePage() {
     setStep("success");
   };
 
-  const Field = ({ label, field, placeholder, type = "text" }: { label: string; field: keyof FormState; placeholder: string; type?: string }) => (
-    <div>
-      <label className="text-xs font-bold uppercase tracking-wide text-muted">{label}</label>
-      <input type={type} value={form[field]} onChange={(e) => set(field, e.target.value)} placeholder={placeholder} className="w-full mt-1.5 min-h-[52px] px-4 rounded-2xl border-2 border-ink/15 bg-white text-base focus:border-coral focus:outline-none" />
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-bone flex flex-col px-6 pt-8 pb-10 max-w-md mx-auto">
       <div className="flex items-center justify-between mb-5">
@@ -187,7 +197,7 @@ export default function ActivatePage() {
           <h2 className="text-2xl font-bold mb-2">{tr("Create your account", "إنشاء الحساب")}</h2>
           <p className="text-muted mb-8">{tr("Demo only — no real SMS is sent.", "نسخة تجريبية — لن يتم إرسال رسالة حقيقية.")}</p>
           <div className="space-y-4">
-            <Field label={tr("Phone or email", "الهاتف أو البريد الإلكتروني")} field="accountContact" placeholder="+20 100 000 0000" />
+            <ActivationField label={tr("Phone or email", "الهاتف أو البريد الإلكتروني")} value={form.accountContact} onChange={(value) => set("accountContact", value)} placeholder="+20 100 000 0000" />
             <button onClick={() => setStep("emergency")} className="w-full min-h-[52px] rounded-2xl bg-ink text-bone font-bold text-sm">{tr("Continue", "متابعة")}</button>
           </div>
         </motion.div>
@@ -198,15 +208,15 @@ export default function ActivatePage() {
           <h2 className="text-2xl font-bold mb-2">{tr("Emergency information", "بيانات الطوارئ")}</h2>
           <p className="text-muted mb-6">{tr("Enter the minimum information now. You can edit everything later from Medical Profile.", "أدخل الحد الأدنى الآن، ويمكنك تعديل كل البيانات لاحقًا من الملف الطبي.")}</p>
           <div className="space-y-4">
-            <Field label={tr("Full name", "الاسم بالكامل")} field="fullName" placeholder={tr("Patient name", "اسم المريض")} />
-            <Field label={tr("Date of birth", "تاريخ الميلاد")} field="dateOfBirth" placeholder="YYYY-MM-DD" type="date" />
-            <Field label={tr("Blood type", "فصيلة الدم")} field="bloodType" placeholder={tr("O+, A-, or Unknown", "O+ أو A- أو غير معروف")} />
-            <Field label={tr("Emergency contact name", "اسم جهة اتصال الطوارئ")} field="emergencyName" placeholder={tr("Name", "الاسم")} />
-            <Field label={tr("Emergency contact phone", "هاتف جهة اتصال الطوارئ")} field="emergencyPhone" placeholder="+20 ..." type="tel" />
-            <Field label={tr("Relationship", "صلة القرابة")} field="emergencyRelationship" placeholder={tr("Sister, father, guardian…", "أخت، أب، ولي أمر…")} />
-            <Field label={tr("Critical allergy", "حساسية مهمة")} field="criticalAllergy" placeholder={tr("Penicillin, peanuts…", "بنسلين، فول سوداني…")} />
-            <Field label={tr("Known allergy reaction", "رد فعل الحساسية")} field="allergyReaction" placeholder={tr("Breathing difficulty, rash…", "صعوبة تنفس، طفح…")} />
-            <Field label={tr("Important condition", "حالة مرضية مهمة")} field="condition" placeholder={tr("Diabetes, asthma…", "سكري، ربو…")} />
+            <ActivationField label={tr("Full name", "الاسم بالكامل")} value={form.fullName} onChange={(value) => set("fullName", value)} placeholder={tr("Patient name", "اسم المريض")} />
+            <ActivationField label={tr("Date of birth", "تاريخ الميلاد")} value={form.dateOfBirth} onChange={(value) => set("dateOfBirth", value)} placeholder="YYYY-MM-DD" type="date" />
+            <ActivationField label={tr("Blood type", "فصيلة الدم")} value={form.bloodType} onChange={(value) => set("bloodType", value)} placeholder={tr("O+, A-, or Unknown", "O+ أو A- أو غير معروف")} />
+            <ActivationField label={tr("Emergency contact name", "اسم جهة اتصال الطوارئ")} value={form.emergencyName} onChange={(value) => set("emergencyName", value)} placeholder={tr("Name", "الاسم")} />
+            <ActivationField label={tr("Emergency contact phone", "هاتف جهة اتصال الطوارئ")} value={form.emergencyPhone} onChange={(value) => set("emergencyPhone", value)} placeholder="+20 ..." type="tel" />
+            <ActivationField label={tr("Relationship", "صلة القرابة")} value={form.emergencyRelationship} onChange={(value) => set("emergencyRelationship", value)} placeholder={tr("Sister, father, guardian…", "أخت، أب، ولي أمر…")} />
+            <ActivationField label={tr("Critical allergy", "حساسية مهمة")} value={form.criticalAllergy} onChange={(value) => set("criticalAllergy", value)} placeholder={tr("Penicillin, peanuts…", "بنسلين، فول سوداني…")} />
+            <ActivationField label={tr("Known allergy reaction", "رد فعل الحساسية")} value={form.allergyReaction} onChange={(value) => set("allergyReaction", value)} placeholder={tr("Breathing difficulty, rash…", "صعوبة تنفس، طفح…")} />
+            <ActivationField label={tr("Important condition", "حالة مرضية مهمة")} value={form.condition} onChange={(value) => set("condition", value)} placeholder={tr("Diabetes, asthma…", "سكري، ربو…")} />
             {error && <p className="text-sm text-coral font-bold">{error}</p>}
             <button onClick={activate} className="w-full min-h-[52px] rounded-2xl bg-coral text-white font-bold text-sm">{tr("Activate Emergency ID", "تفعيل هوية الطوارئ")}</button>
           </div>

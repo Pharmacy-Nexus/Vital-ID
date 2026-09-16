@@ -35,7 +35,7 @@ export default function DevicesPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto px-5 pt-6 pb-8">
+    <div className="max-w-4xl mx-auto px-5 lg:px-8 pt-6 pb-8">
       <div className="flex items-start justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold mb-2">{tr("Linked IDs", "الهويات المرتبطة")}</h1>

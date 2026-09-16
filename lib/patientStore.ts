@@ -29,6 +29,8 @@ function normalizePatient(patient: PatientProfile): PatientProfile {
   return {
     ...patient,
     bloodTypeSource: patient.bloodTypeSource ?? "patient",
+    photoEmergencyVisible: patient.photoEmergencyVisible ?? false,
+    photoUrl: undefined,
     conditions: patient.conditions.map((item) => ({ ...item, visibility: item.visibility ?? "emergency" })),
     medications: patient.medications.map((item) => ({ ...item, visibility: item.visibility ?? "emergency" })),
     allergies: patient.allergies.map((item) => ({ ...item, visibility: item.visibility ?? "emergency" })),

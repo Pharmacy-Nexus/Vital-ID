@@ -22,7 +22,7 @@ export default function ActivityPage() {
   }, {});
 
   return (
-    <div className="max-w-md mx-auto px-5 pt-6">
+    <div className="max-w-4xl mx-auto px-5 lg:px-8 pt-6">
       <h1 className="text-2xl font-bold mb-6">{tr("Access History", "سجل النشاط والوصول")}</h1>
       {Object.keys(grouped).length === 0 ? (
         <div className="bg-white rounded-2xl p-8 border hairline text-center"><p className="text-muted">{tr("No activity recorded yet.", "لم يتم تسجيل أي نشاط بعد.")}</p></div>

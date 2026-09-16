@@ -6,7 +6,7 @@ import { ChevronDown, FileText, Pill, AlertTriangle, Scissors, Syringe, FlaskCon
 import type { PatientProfile, TimelineEvent } from "@/lib/types";
 import SourceBadge from "@/components/ui/SourceBadge";
 import FreshnessChip from "@/components/ui/FreshnessChip";
-import Avatar from "@/components/ui/Avatar";
+import ProfilePhoto from "@/components/ui/ProfilePhoto";
 import IdentityMark from "@/components/ui/IdentityMark";
 import { useLang } from "@/components/ui/LangProvider";
 import DocumentViewer from "@/components/documents/DocumentViewer";
@@ -49,7 +49,7 @@ export default function DoctorRecord({ patient, doctorAccessToken }: { patient: 
     <div className="min-h-screen bg-bone pb-12">
       <div className="bg-ink text-bone px-5 pt-6 pb-8">
         <div className="flex items-center justify-between mb-5"><span className="text-[11px] font-bold tracking-[0.25em] uppercase text-lime">{tr("Medical Record", "السجل الطبي")}</span><IdentityMark id={patient.slug} className="text-lime/60" barClass="bg-lime/60" /></div>
-        <div className="flex items-center gap-3"><Avatar name={`${patient.firstName} ${patient.lastName}`} color={patient.photoColor} size={48} /><div><h1 className="text-2xl font-bold">{patient.firstName} {patient.lastName}</h1><p className="text-bone/50 text-sm">{tr("Age", "العمر")} {patient.age > 0 ? patient.age : tr("Unknown", "غير معروف")} · {tr("Blood type", "فصيلة الدم")} {patient.bloodType}</p></div></div>
+        <div className="flex items-center gap-3"><ProfilePhoto patient={patient} size={52} showRing={false} className="ring-1 ring-bone/20" /><div><h1 className="text-2xl font-bold">{patient.firstName} {patient.lastName}</h1><p className="text-bone/50 text-sm">{tr("Age", "العمر")} {patient.age > 0 ? patient.age : tr("Unknown", "غير معروف")} · {tr("Blood type", "فصيلة الدم")} {patient.bloodType}</p></div></div>
       </div>
 
       <div className="px-5 max-w-2xl mx-auto">

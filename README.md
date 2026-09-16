@@ -71,3 +71,13 @@ The `/` route is now a customer-facing VITAL ID landing page using the provided 
 - Clicking any card/wristband opens an animated editorial detail panel with use cases and key functions.
 - Added mobile horizontal swipe selector and responsive product detail layout.
 - No backend, Supabase, QR, dashboard, OTP, or cloud logic changed.
+
+## v4.4 Dashboard & profile update
+
+- Fixed the Activation form focus bug: typing no longer loses focus after each character.
+- Rebuilt `/dashboard` as a responsive owner home with patient summary, medical snapshot, live QR and quick actions.
+- Added profile photo upload for adults/children using the existing private Supabase storage bucket (with local IndexedDB fallback).
+- Added an owner-controlled option to show/hide the profile photo in the public Emergency ID.
+- Public Emergency ID and clinician view can receive short-lived signed photo URLs; the private storage path is not exposed.
+- Added a desktop sidebar while keeping the mobile bottom navigation.
+- Widened dashboard subpages on desktop for better use of space.

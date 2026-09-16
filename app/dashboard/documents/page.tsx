@@ -84,10 +84,10 @@ export default function DocumentsPage() {
     addActivity({ type: "update", title: "Document deleted", detail: doc.title });
   };
 
-  if (!patient) return <div className="max-w-md mx-auto px-5 pt-8 text-muted">{tr("Loading documents…", "جارٍ تحميل المستندات…")}</div>;
+  if (!patient) return <div className="max-w-4xl mx-auto px-5 lg:px-8 pt-8 text-muted">{tr("Loading documents…", "جارٍ تحميل المستندات…")}</div>;
 
   return (
-    <div className="max-w-md mx-auto px-5 pt-6 pb-8">
+    <div className="max-w-4xl mx-auto px-5 lg:px-8 pt-6 pb-8">
       <h1 className="text-2xl font-bold mb-2">{tr("Documents & Images", "المستندات والصور")}</h1>
       <p className="text-sm text-muted mb-6">{tr("Upload PDFs or images, keep the real file, preview it later, and choose whether its title can appear on an emergency QR.", "ارفع ملفات PDF أو صورًا، واحتفظ بالملف الحقيقي لمعاينته لاحقًا، واختر ما إذا كان مسموحًا بإظهار عنوانه في QR الطوارئ.")}</p>
 

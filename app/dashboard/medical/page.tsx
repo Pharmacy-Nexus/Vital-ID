@@ -23,7 +23,7 @@ export default function MedicalPage() {
   const [profileDraft, setProfileDraft] = useState({ firstName: "", lastName: "", age: "", dateOfBirth: "", bloodType: "" });
   const [confirming, setConfirming] = useState<string | null>(null);
 
-  if (!patient) return <div className="max-w-md mx-auto px-5 pt-8 text-muted">{tr("Loading medical profile…", "جارٍ تحميل الملف الطبي…")}</div>;
+  if (!patient) return <div className="max-w-4xl mx-auto px-5 lg:px-8 pt-8 text-muted">{tr("Loading medical profile…", "جارٍ تحميل الملف الطبي…")}</div>;
 
   const commit = (next: PatientProfile, activityLabel: string) => {
     savePatient(next);
@@ -76,7 +76,7 @@ export default function MedicalPage() {
   const Empty = ({ text }: { text: string }) => <div className="bg-white/50 rounded-xl border border-dashed hairline p-4 text-sm text-muted">{text}</div>;
 
   return (
-    <div className="max-w-md mx-auto px-5 pt-6 pb-8">
+    <div className="max-w-4xl mx-auto px-5 lg:px-8 pt-6 pb-8">
       <div className="flex items-center justify-between gap-3 mb-5">
         <div>
           <p className="text-[10px] uppercase tracking-[.2em] font-bold text-aubergine">VITAL ID</p>
