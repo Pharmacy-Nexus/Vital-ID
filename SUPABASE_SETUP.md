@@ -137,3 +137,11 @@ After the migration and deploy, test:
 4. On the signed-in owner account open **Dashboard → Clinician updates**.
 5. Accept the suggestion.
 6. Confirm the new item appears in the medical record. It is private by default until the owner changes its visibility.
+
+## Migration 003 — Temporary record sharing
+
+After 001 and 002, run:
+
+`supabase/migrations/003_temporary_shares.sql`
+
+This adds expiring/revocable share links. No new storage bucket is required; Full Record sharing uses temporary signed URLs from the existing private `medical-documents` bucket.

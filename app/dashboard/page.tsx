@@ -19,6 +19,8 @@ import {
   Stethoscope,
   UserRound,
   Watch,
+  Share2,
+  Upload,
 } from "lucide-react";
 import ProfilePhoto from "@/components/ui/ProfilePhoto";
 import { deleteLocalFile, saveLocalFile } from "@/lib/fileStore";
@@ -166,10 +168,16 @@ export default function DashboardHome() {
           <p className="text-sm text-muted mt-1">{tr("Everything important, one place — including the QR people see in an emergency.", "كل ما يهمك في مكان واحد، بما في ذلك QR الذي يظهر في الطوارئ.")}</p>
         </div>
         <div className="flex gap-2">
-          <Link href="/dashboard/medical" className="vital-primary min-h-[42px] px-4 text-xs flex items-center justify-center gap-2"><FileText size={15} />{tr("Edit medical record", "تعديل السجل الطبي")}</Link>
-          <Link href="/dashboard/devices" className="vital-secondary min-h-[42px] px-4 text-xs flex items-center justify-center gap-2"><Watch size={15} />{tr("Manage IDs", "إدارة الأجهزة")}</Link>
+          <Link href="/dashboard/record" className="vital-primary min-h-[42px] px-4 text-xs flex items-center justify-center gap-2"><FileText size={15} />{tr("Open medical record", "فتح السجل الطبي")}</Link>
+          <Link href="/dashboard/profile" className="vital-secondary min-h-[42px] px-4 text-xs flex items-center justify-center gap-2"><UserRound size={15} />{tr("Profile", "الملف")}</Link>
         </div>
       </header>
+
+      <section className="grid md:grid-cols-3 gap-px bg-[#d2d2d7] border border-[#d2d2d7] mb-5">
+        <Link href="/dashboard/record?tab=files&add=1" className="bg-white p-5 hover:bg-[#f4f8fb] transition-colors"><Upload size={18}/><p className="font-semibold mt-3">{tr("Add medical file", "إضافة ملف طبي")}</p><p className="text-xs text-[#707070] mt-1">{tr("Lab, scan, prescription or report", "تحليل أو أشعة أو روشتة أو تقرير")}</p></Link>
+        <Link href="/dashboard/share" className="bg-white p-5 hover:bg-[#f4f8fb] transition-colors"><Share2 size={18}/><p className="font-semibold mt-3">{tr("Share with doctor", "مشاركة مع طبيب")}</p><p className="text-xs text-[#707070] mt-1">{tr("Create a temporary QR", "إنشاء QR مؤقت")}</p></Link>
+        <Link href={qrUrl || "/dashboard/devices"} className="bg-white p-5 hover:bg-[#f4f8fb] transition-colors"><ShieldCheck size={18}/><p className="font-semibold mt-3">{tr("Preview Emergency ID", "معاينة هوية الطوارئ")}</p><p className="text-xs text-[#707070] mt-1">{tr("See exactly what others can view", "شاهد بالضبط ما يمكن للآخرين رؤيته")}</p></Link>
+      </section>
 
       <div className="grid lg:grid-cols-12 gap-5">
         <section className="lg:col-span-5 bg-white border border-[#d2d2d7] p-6 lg:p-7 relative overflow-hidden min-h-[360px]">
@@ -254,9 +262,9 @@ export default function DashboardHome() {
       </div>
 
       <section className="grid md:grid-cols-3 gap-px bg-ink/10 border border-ink/10 mt-5">
-        <Link href="/dashboard/medical" className="bg-white p-5 hover:bg-lime/10 transition-colors"><AlertTriangle size={19} className="text-coral"/><p className="text-[10px] uppercase tracking-wider text-muted font-bold mt-4">{tr("Allergies", "الحساسية")}</p><p className="text-xl font-bold mt-1">{publicAllergies.length ? publicAllergies.map((a) => a.allergen).slice(0, 2).join(" · ") : tr("None added", "لا يوجد")}</p></Link>
-        <Link href="/dashboard/medical" className="bg-white p-5 hover:bg-lime/10 transition-colors"><HeartPulse size={19} className="text-aubergine"/><p className="text-[10px] uppercase tracking-wider text-muted font-bold mt-4">{tr("Active conditions", "الحالات النشطة")}</p><p className="text-xl font-bold mt-1">{activeConditions.length ? activeConditions.map((c) => c.name).slice(0, 2).join(" · ") : tr("None added", "لا يوجد")}</p></Link>
-        <Link href="/dashboard/medical" className="bg-white p-5 hover:bg-lime/10 transition-colors"><Pill size={19}/><p className="text-[10px] uppercase tracking-wider text-muted font-bold mt-4">{tr("Medications", "الأدوية")}</p><p className="text-xl font-bold mt-1">{patient.medications.length ? patient.medications.slice(0, 2).map((m) => m.name).join(" · ") : tr("None added", "لا يوجد")}</p></Link>
+        <Link href="/dashboard/record" className="bg-white p-5 hover:bg-lime/10 transition-colors"><AlertTriangle size={19} className="text-coral"/><p className="text-[10px] uppercase tracking-wider text-muted font-bold mt-4">{tr("Allergies", "الحساسية")}</p><p className="text-xl font-bold mt-1">{publicAllergies.length ? publicAllergies.map((a) => a.allergen).slice(0, 2).join(" · ") : tr("None added", "لا يوجد")}</p></Link>
+        <Link href="/dashboard/record" className="bg-white p-5 hover:bg-lime/10 transition-colors"><HeartPulse size={19} className="text-aubergine"/><p className="text-[10px] uppercase tracking-wider text-muted font-bold mt-4">{tr("Active conditions", "الحالات النشطة")}</p><p className="text-xl font-bold mt-1">{activeConditions.length ? activeConditions.map((c) => c.name).slice(0, 2).join(" · ") : tr("None added", "لا يوجد")}</p></Link>
+        <Link href="/dashboard/record" className="bg-white p-5 hover:bg-lime/10 transition-colors"><Pill size={19}/><p className="text-[10px] uppercase tracking-wider text-muted font-bold mt-4">{tr("Medications", "الأدوية")}</p><p className="text-xl font-bold mt-1">{patient.medications.length ? patient.medications.slice(0, 2).map((m) => m.name).join(" · ") : tr("None added", "لا يوجد")}</p></Link>
       </section>
 
       <div className="grid lg:grid-cols-12 gap-5 mt-5">

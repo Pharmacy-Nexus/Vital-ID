@@ -17,7 +17,7 @@ export default function FamilyPage() {
 
   const manage = (slug: string) => {
     setActiveSlug(slug);
-    router.push("/dashboard/medical");
+    router.push("/dashboard/record");
   };
 
   return (
@@ -31,7 +31,7 @@ export default function FamilyPage() {
         {patients.map((patient) => {
           const primary = devices.find((d) => d.patientSlug === patient.slug && d.status === "active");
           return <div key={patient.slug} className={`bg-white rounded-2xl p-5 border ${patient.slug === activeSlug ? "border-aubergine/40" : "hairline"}`}>
-            <div className="flex items-start gap-3"><ProfilePhoto patient={patient} size={44} showRing={false} /><div className="flex-1 min-w-0"><p className="font-bold truncate">{patient.firstName} {patient.lastName}</p><p className="text-xs text-muted mt-0.5">{tr("Age", "العمر")} {patient.age || tr("Unknown", "غير معروف")} · {patient.bloodType || "—"}</p><p className="text-[10px] text-muted font-mono mt-1 truncate">{patient.slug}</p></div>{patient.slug === activeSlug && <span className="text-[10px] font-bold bg-lime/20 px-2 py-1 rounded-full">{tr("Active", "الحالي")}</span>}</div>
+            <div className="flex items-start gap-3"><ProfilePhoto patient={patient} size={44} showRing={false} /><div className="flex-1 min-w-0"><p className="font-bold truncate">{patient.firstName} {patient.lastName}</p><p className="text-xs text-muted mt-0.5">{tr("Age", "العمر")} {patient.age || tr("Unknown", "غير معروف")} · {patient.bloodType || "—"}</p><p className="text-[10px] text-muted mt-1">{patient.relationshipToOwner === "child" ? tr("Child profile", "ملف طفل") : patient.relationshipToOwner === "caregiver" ? tr("Someone you care for", "شخص ترعاه") : tr("Your profile", "ملفك")}</p></div>{patient.slug === activeSlug && <span className="text-[10px] font-bold bg-lime/20 px-2 py-1 rounded-full">{tr("Active", "الحالي")}</span>}</div>
             <div className="grid grid-cols-2 gap-2 mt-4"><button onClick={() => manage(patient.slug)} className="min-h-[42px] rounded-xl bg-ink text-bone text-xs font-bold">{tr("Manage profile", "إدارة الملف")}</button>{primary ? <Link href={`/id/${primary.qrSlug}`} className="min-h-[42px] rounded-xl border-2 border-ink text-xs font-bold flex items-center justify-center gap-1">{tr("Open QR view", "فتح عرض QR")}<ChevronRight size={14}/></Link> : <Link href="/dashboard/devices" onClick={() => setActiveSlug(patient.slug)} className="min-h-[42px] rounded-xl border-2 border-ink/20 text-xs font-bold flex items-center justify-center">{tr("Add device", "إضافة جهاز")}</Link>}</div>
           </div>;
         })}

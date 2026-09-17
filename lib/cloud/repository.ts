@@ -1,6 +1,6 @@
 "use client";
 
-import type { ClinicalSuggestion, LinkedDevice, PatientProfile } from "@/lib/types";
+import type { ClinicalSuggestion, LinkedDevice, PatientProfile, ShareScope, TemporaryShare } from "@/lib/types";
 import { getSupabaseBrowser, isCloudConfigured } from "@/lib/cloud/supabaseBrowser";
 
 export type CloudActivity = {
@@ -169,6 +169,80 @@ export async function setClinicalSuggestionStatus(id: string, status: "accepted"
   const { error } = await supabase
     .from("clinical_suggestions")
     .update({ status, reviewed_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("owner_id", user.id);
+  if (error) throw error;
+  return true;
+}
+
+
+function randomShareToken() {
+  const bytes = new Uint8Array(24);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (value) => value.toString(16).padStart(2, "0")).join("");
+}
+
+export async function createTemporaryShare(patientSlug: string, scope: ShareScope, durationMinutes: number) {
+  if (!isCloudConfigured()) throw new Error("cloud_not_configured");
+  const supabase = getSupabaseBrowser();
+  const user = await getCloudUser();
+  if (!supabase || !user) throw new Error("sign_in_required");
+  const patientId = await getCloudPatientId(patientSlug);
+  if (!patientId) throw new Error("patient_not_synced");
+  const token = randomShareToken();
+  const expiresAt = new Date(Date.now() + Math.max(5, durationMinutes) * 60_000).toISOString();
+  const { data, error } = await supabase.from("share_links").insert({
+    owner_id: user.id,
+    patient_id: patientId,
+    token,
+    scope,
+    expires_at: expiresAt,
+  }).select("id,token,scope,expires_at,revoked_at,created_at").single();
+  if (error) throw error;
+  await insertCloudActivity("access", "Temporary record link created", `${scope} · expires ${expiresAt}`, patientSlug).catch(() => {});
+  return {
+    id: String(data.id),
+    token: String(data.token),
+    patientSlug,
+    scope: data.scope as ShareScope,
+    expiresAt: String(data.expires_at),
+    revokedAt: data.revoked_at ? String(data.revoked_at) : null,
+    createdAt: String(data.created_at),
+  } satisfies TemporaryShare;
+}
+
+export async function loadTemporaryShares(patientSlug: string) {
+  if (!isCloudConfigured()) return [] as TemporaryShare[];
+  const supabase = getSupabaseBrowser();
+  const user = await getCloudUser();
+  if (!supabase || !user) return [] as TemporaryShare[];
+  const patientId = await getCloudPatientId(patientSlug);
+  if (!patientId) return [] as TemporaryShare[];
+  const { data, error } = await supabase.from("share_links")
+    .select("id,token,scope,expires_at,revoked_at,created_at")
+    .eq("owner_id", user.id)
+    .eq("patient_id", patientId)
+    .order("created_at", { ascending: false })
+    .limit(30);
+  if (error) throw error;
+  return (data ?? []).map((row: any) => ({
+    id: String(row.id),
+    token: String(row.token),
+    patientSlug,
+    scope: row.scope as ShareScope,
+    expiresAt: String(row.expires_at),
+    revokedAt: row.revoked_at ? String(row.revoked_at) : null,
+    createdAt: String(row.created_at),
+  }));
+}
+
+export async function revokeTemporaryShare(id: string) {
+  if (!isCloudConfigured()) return false;
+  const supabase = getSupabaseBrowser();
+  const user = await getCloudUser();
+  if (!supabase || !user) return false;
+  const { error } = await supabase.from("share_links")
+    .update({ revoked_at: new Date().toISOString() })
     .eq("id", id)
     .eq("owner_id", user.id);
   if (error) throw error;

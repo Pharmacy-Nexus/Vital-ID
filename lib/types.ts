@@ -1,6 +1,8 @@
 export type Freshness = "current" | "review" | "outdated";
 export type SourceType = "patient" | "document" | "provider";
 export type Visibility = "emergency" | "private";
+export type DocumentCategory = "lab" | "radiology" | "prescription" | "discharge" | "surgery" | "vaccination" | "visit" | "other";
+export type RelationshipToOwner = "self" | "child" | "caregiver" | "other";
 
 export type TimelineEvent = {
   id: string;
@@ -63,6 +65,8 @@ export type PatientDocument = {
   mimeType?: string;
   size?: number;
   visibility?: Visibility;
+  category?: DocumentCategory;
+  notes?: string;
 };
 
 export type DeviceDisplaySettings = {
@@ -100,6 +104,7 @@ export type PatientProfile = {
   photoFileName?: string;
   photoEmergencyVisible?: boolean;
   photoUrl?: string;
+  relationshipToOwner?: RelationshipToOwner;
   emergencyProfile: { completeness: number };
   recordCompleteness: number;
   lastConfirmation: string;
@@ -163,4 +168,17 @@ export type ClinicalSuggestion = {
   attachment?: ClinicalSuggestionAttachment | null;
   createdAt: string;
   reviewedAt?: string | null;
+};
+
+
+export type ShareScope = "emergency" | "summary" | "full";
+
+export type TemporaryShare = {
+  id: string;
+  token: string;
+  patientSlug: string;
+  scope: ShareScope;
+  expiresAt: string;
+  revokedAt?: string | null;
+  createdAt: string;
 };

@@ -18,6 +18,7 @@ function attachmentDocument(suggestion: ClinicalSuggestion): PatientDocument | n
     mimeType: file.mimeType,
     size: file.size,
     visibility: "private",
+    category: suggestion.kind === "lab" ? "lab" : suggestion.kind === "radiology" ? "radiology" : suggestion.kind === "surgery" ? "surgery" : suggestion.kind === "vaccination" ? "vaccination" : "other",
   };
 }
 

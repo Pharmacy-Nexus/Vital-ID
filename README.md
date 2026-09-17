@@ -115,3 +115,22 @@ This build keeps the v4.5 medical/doctor functionality and changes the visual sy
 - emergency view simplified for faster scanning
 - existing VITAL ID logo/product assets retained
 - the old AI disclaimer was removed from Medical Record because the current product direction is no-AI backend
+
+## v4.7 — Medical Passport features (no AI backend)
+
+This build expands VITAL ID from an Emergency ID into a simple medical passport while keeping the main navigation to four areas: Home, Record, Family, Profile.
+
+### Added
+- **Medical Vault** inside `Dashboard → Record → Files` with manual categories for labs, radiology, prescriptions, discharge papers, surgery, vaccination, visit notes, and other files.
+- **Medical Timeline** generated deterministically from the structured record and uploaded-file dates. No AI extraction or inference is used.
+- **Temporary Sharing** at `/dashboard/share` with three simple presets: Emergency only, Doctor visit, Full record. Links expire automatically and can be revoked immediately.
+- **Public temporary record** at `/share/[token]`. Full-record shares can open original cloud files through short-lived signed URLs; file storage paths are never returned to the browser.
+- **Simplified navigation**: Home / Record / Family / Profile.
+- Existing **Doctor Contributions**, **Family profiles**, and **Emergency Identity** remain integrated with the same patient data source.
+
+### Required Supabase migration
+Run this once after migrations 001 and 002:
+
+`supabase/migrations/003_temporary_shares.sql`
+
+The migration creates the private `share_links` table with owner-only RLS. Public share reads go through the server using the service role and are rejected after expiry or revocation.

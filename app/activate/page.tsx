@@ -100,6 +100,7 @@ export default function ActivatePage() {
       slug: `p-${crypto.randomUUID().replace(/-/g, "")}`,
       firstName,
       lastName,
+      relationshipToOwner: who === "child" ? "child" : who === "other" ? "caregiver" : "self",
       age,
       dateOfBirth: form.dateOfBirth || undefined,
       bloodType: form.bloodType.trim() || tr("Unknown", "غير معروف"),
@@ -230,7 +231,7 @@ export default function ActivatePage() {
           <p className="text-muted mb-8">{tr("The data you entered is now the same data used by Emergency, Dashboard and Doctor views.", "البيانات التي أدخلتها أصبحت هي نفس البيانات المستخدمة في الطوارئ ولوحة التحكم وسجل الطبيب.")}</p>
           <div className="w-full space-y-3">
             <a href={emergencyHref} className="block w-full min-h-[52px] rounded-2xl bg-ink text-bone font-bold text-sm flex items-center justify-center">{tr("VIEW MY EMERGENCY ID", "عرض هوية الطوارئ")}</a>
-            <a href="/dashboard/medical" className="block w-full min-h-[52px] rounded-2xl border-2 border-ink font-bold text-sm flex items-center justify-center">{tr("EDIT MEDICAL PROFILE", "تعديل الملف الطبي")}</a>
+            <a href="/dashboard/record" className="block w-full min-h-[52px] rounded-2xl border-2 border-ink font-bold text-sm flex items-center justify-center">{tr("EDIT MEDICAL PROFILE", "تعديل الملف الطبي")}</a>
           </div>
         </motion.div>
       )}

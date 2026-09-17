@@ -31,11 +31,12 @@ function normalizePatient(patient: PatientProfile): PatientProfile {
     bloodTypeSource: patient.bloodTypeSource ?? "patient",
     photoEmergencyVisible: patient.photoEmergencyVisible ?? false,
     photoUrl: undefined,
+    relationshipToOwner: patient.relationshipToOwner ?? "self",
     conditions: patient.conditions.map((item) => ({ ...item, visibility: item.visibility ?? "emergency" })),
     medications: patient.medications.map((item) => ({ ...item, visibility: item.visibility ?? "emergency" })),
     allergies: patient.allergies.map((item) => ({ ...item, visibility: item.visibility ?? "emergency" })),
     emergencyContacts: patient.emergencyContacts.map((item) => ({ ...item, visibility: item.visibility ?? "emergency" })),
-    documents: patient.documents.map((item) => ({ ...item, visibility: item.visibility ?? "private" })),
+    documents: patient.documents.map((item) => ({ ...item, visibility: item.visibility ?? "private", category: item.category ?? "other" })),
   };
 }
 

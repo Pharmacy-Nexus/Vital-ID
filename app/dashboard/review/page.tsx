@@ -144,7 +144,7 @@ export default function ClinicianReviewPage() {
         </div>
       </section>
 
-      <div className="mt-7"><Link href="/dashboard/medical" className="text-sm font-bold underline underline-offset-4">{tr("Open medical record", "فتح السجل الطبي")}</Link></div>
+      <div className="mt-7"><Link href="/dashboard/record" className="text-sm font-bold underline underline-offset-4">{tr("Open medical record", "فتح السجل الطبي")}</Link></div>
       <DocumentViewer document={previewDoc} onClose={() => setPreviewDoc(null)} />
     </div>
   );
