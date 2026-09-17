@@ -81,3 +81,23 @@ The `/` route is now a customer-facing VITAL ID landing page using the provided 
 - Public Emergency ID and clinician view can receive short-lived signed photo URLs; the private storage path is not exposed.
 - Added a desktop sidebar while keeping the mobile bottom navigation.
 - Widened dashboard subpages on desktop for better use of space.
+
+## v4.5 Clinician suggestions
+
+- Authorized clinician sessions can now create a **Clinical Update** without directly editing the patient record.
+- Supported suggestion types: condition, medication start/change/stop, allergy, lab result, radiology result, surgery/procedure, vaccination, clinical note, and document-only.
+- A clinician may attach a PDF or image (maximum 12 MB). Attachments are uploaded server-side to the existing private `medical-documents` bucket.
+- Suggestions appear in `/dashboard/review` for the owner/patient.
+- The patient can **Accept & add to record** or **Reject** each suggestion.
+- Accepted structured data is merged into the current patient record with `Clinician suggested · patient approved` provenance where the data model supports source labels.
+- Rejected suggestion attachments are removed from private storage when possible.
+- Suggest / accept / reject actions are added to the activity history.
+- Clinicians still cannot change account, device, QR, privacy, identity or emergency-contact settings directly.
+
+### Required database update
+
+After v4.5 is deployed, run `supabase/migrations/002_clinical_suggestions.sql` once in the Supabase SQL Editor. Do **not** re-run or replace migration 001.
+
+## Build note
+
+This package was prepared from the user-uploaded v4.4 archive. Static TypeScript syntax parsing passed for all 51 TS/TSX files and all local @/ imports resolved. A full npm build was not run because dependency installation timed out in this environment; Vercel should perform the final production build.

@@ -1,6 +1,6 @@
 "use client";
 
-import type { LinkedDevice, PatientProfile } from "@/lib/types";
+import type { ClinicalSuggestion, LinkedDevice, PatientProfile } from "@/lib/types";
 import { getSupabaseBrowser, isCloudConfigured } from "@/lib/cloud/supabaseBrowser";
 
 export type CloudActivity = {
@@ -121,6 +121,56 @@ export async function insertCloudActivity(type: "scan" | "access" | "update", ti
     title,
     detail,
   });
+  if (error) throw error;
+  return true;
+}
+
+
+function mapClinicalSuggestion(row: any, patientSlug: string): ClinicalSuggestion {
+  return {
+    id: String(row.id),
+    patientId: String(row.patient_id),
+    patientSlug,
+    qrSlug: row.qr_slug ? String(row.qr_slug) : undefined,
+    kind: row.kind,
+    status: row.status,
+    payload: (row.payload ?? {}) as Record<string, string>,
+    attachment: row.attachment ?? null,
+    createdAt: String(row.created_at),
+    reviewedAt: row.reviewed_at ? String(row.reviewed_at) : null,
+  };
+}
+
+export async function loadClinicalSuggestions(patientSlug: string, status?: "pending" | "accepted" | "rejected") {
+  if (!isCloudConfigured()) return [] as ClinicalSuggestion[];
+  const supabase = getSupabaseBrowser();
+  const user = await getCloudUser();
+  if (!supabase || !user) return [] as ClinicalSuggestion[];
+  const patientId = await getCloudPatientId(patientSlug);
+  if (!patientId) return [] as ClinicalSuggestion[];
+
+  let query = supabase
+    .from("clinical_suggestions")
+    .select("id,patient_id,qr_slug,kind,status,payload,attachment,created_at,reviewed_at")
+    .eq("owner_id", user.id)
+    .eq("patient_id", patientId)
+    .order("created_at", { ascending: false });
+  if (status) query = query.eq("status", status);
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data ?? []).map((row: any) => mapClinicalSuggestion(row, patientSlug));
+}
+
+export async function setClinicalSuggestionStatus(id: string, status: "accepted" | "rejected") {
+  if (!isCloudConfigured()) return false;
+  const supabase = getSupabaseBrowser();
+  const user = await getCloudUser();
+  if (!supabase || !user) return false;
+  const { error } = await supabase
+    .from("clinical_suggestions")
+    .update({ status, reviewed_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("owner_id", user.id);
   if (error) throw error;
   return true;
 }

@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Home, FileText, FolderOpen, Watch, Users, Activity, Languages } from "lucide-react";
+import { Home, FileText, FolderOpen, Watch, Users, Activity, Languages, ClipboardCheck } from "lucide-react";
 import { LangToggle, useLang } from "@/components/ui/LangProvider";
 import CloudSyncBanner from "@/components/cloud/CloudSyncBanner";
 
@@ -17,6 +17,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { href: "/dashboard/devices", icon: Watch, label: tr("IDs & QR", "الأجهزة وQR") },
     { href: "/dashboard/family", icon: Users, label: tr("Family", "العائلة") },
     { href: "/dashboard/activity", icon: Activity, label: tr("Activity", "النشاط") },
+    { href: "/dashboard/review", icon: ClipboardCheck, label: tr("Clinician updates", "تحديثات الطبيب") },
   ];
 
   const isActive = (href: string) => href === "/dashboard" ? pathname === href : pathname.startsWith(href);

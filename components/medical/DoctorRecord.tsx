@@ -10,6 +10,7 @@ import ProfilePhoto from "@/components/ui/ProfilePhoto";
 import IdentityMark from "@/components/ui/IdentityMark";
 import { useLang } from "@/components/ui/LangProvider";
 import DocumentViewer from "@/components/documents/DocumentViewer";
+import ClinicalUpdateComposer from "@/components/medical/ClinicalUpdateComposer";
 
 function Section({ title, icon, children, defaultOpen = true }: { title: string; icon: React.ReactNode; children: React.ReactNode; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -53,6 +54,13 @@ export default function DoctorRecord({ patient, doctorAccessToken }: { patient: 
       </div>
 
       <div className="px-5 max-w-2xl mx-auto">
+        {doctorAccessToken && (
+          <div className="py-5 border-b hairline">
+            <ClinicalUpdateComposer token={doctorAccessToken} />
+            <p className="text-[11px] text-muted mt-2 leading-relaxed">{tr("Updates are sent as suggestions. The patient must approve them before the medical record changes.", "يتم إرسال التحديثات كاقتراحات، ولن يتغير السجل الطبي إلا بعد موافقة المريض.")}</p>
+          </div>
+        )}
+
         <div className="py-6 border-b hairline">
           <h2 className="text-[11px] font-bold tracking-[0.25em] uppercase text-muted mb-4">{tr("Medical Snapshot", "الملخص الطبي")}</h2>
           <div className="space-y-3">

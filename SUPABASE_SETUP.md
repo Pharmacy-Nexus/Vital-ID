@@ -118,3 +118,22 @@ Confirm all three points:
 1. Dashboard says **Cloud synced**.
 2. The QR came from Dashboard → Devices and uses `/id/qr-...`, not an old hardcoded `/id/demo-001` link.
 3. Vercel contains all three Supabase variables plus the service-role key and was redeployed after adding them.
+
+## v4.5 — Enable clinician suggestions
+
+If you are upgrading an existing VITAL ID cloud project, keep your current database and run only this additional migration:
+
+`supabase/migrations/002_clinical_suggestions.sql`
+
+Supabase → **SQL Editor → New query** → paste the full contents of that file → **Run**.
+
+The migration creates `clinical_suggestions` with RLS so authenticated owners can read and review only their own patients' suggestions. Public/anonymous browsers are not granted table access. Clinician submissions are accepted only by the server route after a valid temporary clinician-session token is verified.
+
+After the migration and deploy, test:
+
+1. Scan a live device QR from a second phone.
+2. Choose Healthcare Professional and authorize the temporary session.
+3. Open **Add clinical update** and send an Allergy such as `Aspirin` + `Severe rash`.
+4. On the signed-in owner account open **Dashboard → Clinician updates**.
+5. Accept the suggestion.
+6. Confirm the new item appears in the medical record. It is private by default until the owner changes its visibility.

@@ -8,6 +8,7 @@ import {
   AlertTriangle,
   Camera,
   Check,
+  ClipboardCheck,
   Copy,
   ExternalLink,
   FileText,
@@ -25,6 +26,7 @@ import { getActivity } from "@/lib/store";
 import { savePatient, useActivePatient } from "@/lib/patientStore";
 import { useLang } from "@/components/ui/LangProvider";
 import { useDevices } from "@/lib/deviceStore";
+import { loadClinicalSuggestions } from "@/lib/cloud/repository";
 
 async function optimizeProfilePhoto(file: File) {
   if (!file.type.startsWith("image/")) throw new Error("not_image");
@@ -59,6 +61,7 @@ export default function DashboardHome() {
   const [photoBusy, setPhotoBusy] = useState(false);
   const [photoMessage, setPhotoMessage] = useState("");
   const [copied, setCopied] = useState(false);
+  const [pendingClinicianUpdates, setPendingClinicianUpdates] = useState(0);
 
   useEffect(() => {
     const refresh = () => {
@@ -68,6 +71,22 @@ export default function DashboardHome() {
     const timer = window.setInterval(refresh, 5000);
     return () => window.clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (!patient) return;
+    let alive = true;
+    const refreshPending = async () => {
+      try {
+        const suggestions = await loadClinicalSuggestions(patient.slug, "pending");
+        if (alive) setPendingClinicianUpdates(suggestions.length);
+      } catch {
+        if (alive) setPendingClinicianUpdates(0);
+      }
+    };
+    void refreshPending();
+    const timer = window.setInterval(() => void refreshPending(), 15000);
+    return () => { alive = false; window.clearInterval(timer); };
+  }, [patient]);
 
   const patientDevices = useMemo(
     () => devices.filter((device) => patient && device.patientSlug === patient.slug),
@@ -265,6 +284,7 @@ export default function DashboardHome() {
           <p className="text-[10px] uppercase tracking-[.2em] font-bold text-aubergine">{tr("QUICK STATUS", "الحالة السريعة")}</p>
           <div className="mt-5 space-y-5">
             <div className="flex items-start gap-3"><Stethoscope size={19} className="text-aubergine shrink-0"/><div><p className="font-bold text-sm">{tr("Doctor access", "وصول الطبيب")}</p><p className="text-xs text-muted mt-1">{tr("Temporary access is available from the Emergency ID.", "الوصول المؤقت متاح من هوية الطوارئ.")}</p></div></div>
+            <Link href="/dashboard/review" className="flex items-start gap-3 group"><ClipboardCheck size={19} className="text-aubergine shrink-0"/><div><p className="font-bold text-sm group-hover:underline">{tr("Clinician updates", "تحديثات الطبيب")}</p><p className="text-xs text-muted mt-1">{pendingClinicianUpdates > 0 ? `${pendingClinicianUpdates} ${tr("waiting for your approval", "بانتظار موافقتك")}` : tr("No updates waiting for review", "لا توجد تحديثات تنتظر المراجعة")}</p></div></Link>
             <div className="flex items-start gap-3"><Phone size={19} className="text-coral shrink-0"/><div><p className="font-bold text-sm">{tr("Emergency contact", "جهة اتصال الطوارئ")}</p><p className="text-xs text-muted mt-1">{emergencyContact ? emergencyContact.phone : tr("Add one from Medical Record", "أضف جهة اتصال من السجل الطبي")}</p></div></div>
             <div className="flex items-start gap-3"><UserRound size={19} className="shrink-0"/><div><p className="font-bold text-sm">{tr("Profile photo", "صورة الملف")}</p><p className="text-xs text-muted mt-1">{patient.photoFileKey ? tr("Added", "مضافة") : tr("Not added yet", "لم تتم إضافتها")}</p></div></div>
             <div className="flex items-start gap-3"><ShieldCheck size={19} className="text-lime shrink-0"/><div><p className="font-bold text-sm">{tr("QR scans", "مرات فتح QR")}</p><p className="text-xs text-muted mt-1">{activity.filter((item) => item.type === "scan").length} {tr("recorded in activity", "مسجلة في سجل النشاط")}</p></div></div>

@@ -131,3 +131,36 @@ export type PatientProfile = {
   emergencyContacts: EmergencyContact[];
   documents: PatientDocument[];
 };
+
+export type ClinicalSuggestionKind =
+  | "condition"
+  | "medication"
+  | "allergy"
+  | "lab"
+  | "radiology"
+  | "surgery"
+  | "vaccination"
+  | "note"
+  | "document";
+
+export type ClinicalSuggestionStatus = "pending" | "accepted" | "rejected";
+
+export type ClinicalSuggestionAttachment = {
+  fileKey: string;
+  fileName: string;
+  mimeType: string;
+  size: number;
+};
+
+export type ClinicalSuggestion = {
+  id: string;
+  patientId: string;
+  patientSlug: string;
+  qrSlug?: string;
+  kind: ClinicalSuggestionKind;
+  status: ClinicalSuggestionStatus;
+  payload: Record<string, string>;
+  attachment?: ClinicalSuggestionAttachment | null;
+  createdAt: string;
+  reviewedAt?: string | null;
+};
