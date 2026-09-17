@@ -172,8 +172,6 @@ export default function MedicalPage() {
         {patient.emergencyContacts.map((c) => <div key={c.id} className="bg-white rounded-xl p-4 border hairline mb-2 flex items-center justify-between gap-3"><div><p className="font-bold">{c.name}</p><p className="text-xs text-muted mt-1">{c.relationship} · {c.phone}</p></div><button onClick={() => openEdit("contact", c)} className="text-[11px] font-bold text-muted"><Pencil size={12} /></button></div>)}
       </section>
 
-      <p className="text-[11px] text-muted/60 text-center pb-4">{tr("AI helps organize information. It does not diagnose or replace medical review.", "يساعد الذكاء الاصطناعي في تنظيم المعلومات، ولا يقوم بالتشخيص ولا يستبدل المراجعة الطبية.")}</p>
-
       <MedicalEditorModal open={editorOpen} patient={patient} editing={editing} onClose={() => { setEditorOpen(false); setEditing(null); }} onSave={commit} />
 
       {profileOpen && (

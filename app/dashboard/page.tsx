@@ -162,26 +162,26 @@ export default function DashboardHome() {
       <header className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-7 border-b border-ink/15 pb-5">
         <div>
           <p className="text-[10px] uppercase tracking-[0.22em] font-bold text-aubergine">VITAL ID / {tr("OWNER HOME", "الرئيسية")}</p>
-          <h1 className="text-3xl lg:text-4xl font-bold mt-2">{tr("Your medical identity", "هويتك الطبية")}</h1>
+          <h1 className="vital-page-title text-3xl lg:text-4xl font-semibold mt-2">{tr("Your medical identity", "هويتك الطبية")}</h1>
           <p className="text-sm text-muted mt-1">{tr("Everything important, one place — including the QR people see in an emergency.", "كل ما يهمك في مكان واحد، بما في ذلك QR الذي يظهر في الطوارئ.")}</p>
         </div>
         <div className="flex gap-2">
-          <Link href="/dashboard/medical" className="min-h-[42px] px-4 bg-ink text-bone text-xs font-bold flex items-center justify-center gap-2"><FileText size={15} />{tr("Edit medical record", "تعديل السجل الطبي")}</Link>
-          <Link href="/dashboard/devices" className="min-h-[42px] px-4 border border-ink/20 bg-white text-xs font-bold flex items-center justify-center gap-2"><Watch size={15} />{tr("Manage IDs", "إدارة الأجهزة")}</Link>
+          <Link href="/dashboard/medical" className="vital-primary min-h-[42px] px-4 text-xs flex items-center justify-center gap-2"><FileText size={15} />{tr("Edit medical record", "تعديل السجل الطبي")}</Link>
+          <Link href="/dashboard/devices" className="vital-secondary min-h-[42px] px-4 text-xs flex items-center justify-center gap-2"><Watch size={15} />{tr("Manage IDs", "إدارة الأجهزة")}</Link>
         </div>
       </header>
 
       <div className="grid lg:grid-cols-12 gap-5">
-        <section className="lg:col-span-5 bg-ink text-bone p-6 lg:p-7 relative overflow-hidden min-h-[360px]">
-          <div className="absolute right-0 top-0 w-32 h-32 bg-lime/10 rounded-full blur-3xl" />
+        <section className="lg:col-span-5 bg-white border border-[#d2d2d7] p-6 lg:p-7 relative overflow-hidden min-h-[360px]">
+          <div className="absolute right-0 top-0 w-32 h-32 bg-[#f4f8fb] rounded-full blur-3xl" />
           <div className="relative flex items-start justify-between gap-4">
             <div className="flex items-center gap-4 min-w-0">
               <div className="relative">
-                <ProfilePhoto patient={patient} size={92} showRing={false} className="ring-1 ring-bone/20" />
+                <ProfilePhoto patient={patient} size={92} showRing={false} className="ring-1 ring-[#d2d2d7]" />
                 <button
                   onClick={() => photoInput.current?.click()}
                   disabled={photoBusy}
-                  className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-lime text-ink flex items-center justify-center border-4 border-ink disabled:opacity-60"
+                  className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-[#0071e3] text-white flex items-center justify-center border-4 border-white disabled:opacity-60"
                   aria-label={tr("Change photo", "تغيير الصورة")}
                 >
                   <Camera size={16} />
@@ -189,31 +189,31 @@ export default function DashboardHome() {
                 <input ref={photoInput} type="file" accept="image/*" className="hidden" onChange={(e) => void handlePhoto(e.target.files?.[0])} />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-[.18em] text-lime font-bold">{tr("Medical identity active", "الهوية الطبية مفعلة")}</p>
+                <p className="text-[11px] text-[#707070] font-medium">{tr("Medical identity active", "الهوية الطبية مفعلة")}</p>
                 <h2 className="text-2xl font-bold mt-1 truncate">{patient.firstName} {patient.lastName}</h2>
-                <p className="text-sm text-bone/55 mt-1">{tr("Age", "العمر")} {patient.age || "—"} · {tr("Blood type", "فصيلة الدم")} {patient.bloodType || "—"}</p>
+                <p className="text-sm text-[#707070] mt-1">{tr("Age", "العمر")} {patient.age || "—"} · {tr("Blood type", "فصيلة الدم")} {patient.bloodType || "—"}</p>
               </div>
             </div>
-            <ShieldCheck className="text-lime shrink-0" size={28} />
+            <ShieldCheck className="text-[#0071e3] shrink-0" size={28} />
           </div>
 
-          {photoMessage && <p className="mt-4 text-xs text-lime">{photoMessage}</p>}
+          {photoMessage && <p className="mt-4 text-xs text-[#0066cc]">{photoMessage}</p>}
 
-          <div className="mt-7 grid grid-cols-2 gap-px bg-bone/15 border border-bone/15">
-            <div className="bg-ink p-4"><p className="text-[10px] uppercase tracking-wider text-bone/45">{tr("Emergency profile", "ملف الطوارئ")}</p><p className="text-2xl font-bold mt-1 text-lime">{emergencyCompleteness}%</p></div>
-            <div className="bg-ink p-4"><p className="text-[10px] uppercase tracking-wider text-bone/45">{tr("Full record", "السجل الكامل")}</p><p className="text-2xl font-bold mt-1">{recordCompleteness}%</p></div>
+          <div className="mt-7 grid grid-cols-2 gap-px bg-[#d2d2d7] border border-[#d2d2d7] rounded-lg overflow-hidden">
+            <div className="bg-[#f5f5f7] p-4"><p className="text-[11px] text-[#707070]">{tr("Emergency profile", "ملف الطوارئ")}</p><p className="text-2xl font-semibold mt-1 text-[#0071e3]">{emergencyCompleteness}%</p></div>
+            <div className="bg-[#f5f5f7] p-4"><p className="text-[11px] text-[#707070]">{tr("Full record", "السجل الكامل")}</p><p className="text-2xl font-semibold mt-1">{recordCompleteness}%</p></div>
           </div>
 
           <div className="mt-5 space-y-3 text-sm">
-            <div className="flex items-center justify-between gap-4"><span className="text-bone/50">{tr("Emergency contact", "جهة اتصال الطوارئ")}</span><span className="font-semibold text-right">{emergencyContact ? `${emergencyContact.name} · ${emergencyContact.phone}` : tr("Not added", "غير مضافة")}</span></div>
-            <div className="flex items-center justify-between gap-4"><span className="text-bone/50">{tr("Linked IDs", "الأجهزة المرتبطة")}</span><span className="font-semibold">{patientDevices.length}</span></div>
-            <div className="flex items-center justify-between gap-4"><span className="text-bone/50">{tr("Last confirmation", "آخر تأكيد")}</span><span className="font-semibold">{patient.lastConfirmation}</span></div>
+            <div className="flex items-center justify-between gap-4"><span className="text-[#707070]">{tr("Emergency contact", "جهة اتصال الطوارئ")}</span><span className="font-semibold text-right">{emergencyContact ? `${emergencyContact.name} · ${emergencyContact.phone}` : tr("Not added", "غير مضافة")}</span></div>
+            <div className="flex items-center justify-between gap-4"><span className="text-[#707070]">{tr("Linked IDs", "الأجهزة المرتبطة")}</span><span className="font-semibold">{patientDevices.length}</span></div>
+            <div className="flex items-center justify-between gap-4"><span className="text-[#707070]">{tr("Last confirmation", "آخر تأكيد")}</span><span className="font-semibold">{patient.lastConfirmation}</span></div>
           </div>
 
           {patient.photoFileKey && (
-            <label className="mt-6 flex items-center justify-between gap-4 border-t border-bone/15 pt-4 cursor-pointer">
-              <span><span className="block text-xs font-bold">{tr("Show photo in Emergency ID", "إظهار الصورة في هوية الطوارئ")}</span><span className="block text-[10px] text-bone/45 mt-1">{tr("Useful for identifying a child or patient. You control this.", "مفيد للتعرف على الطفل أو المريض، ويمكنك التحكم فيه.")}</span></span>
-              <input type="checkbox" checked={Boolean(patient.photoEmergencyVisible)} onChange={toggleEmergencyPhoto} className="w-5 h-5 accent-[#B6E36E]" />
+            <label className="mt-6 flex items-center justify-between gap-4 border-t border-[#d2d2d7] pt-4 cursor-pointer">
+              <span><span className="block text-xs font-bold">{tr("Show photo in Emergency ID", "إظهار الصورة في هوية الطوارئ")}</span><span className="block text-[10px] text-[#707070] mt-1">{tr("Useful for identifying a child or patient. You control this.", "مفيد للتعرف على الطفل أو المريض، ويمكنك التحكم فيه.")}</span></span>
+              <input type="checkbox" checked={Boolean(patient.photoEmergencyVisible)} onChange={toggleEmergencyPhoto} className="w-5 h-5 accent-[#0071e3]" />
             </label>
           )}
         </section>
@@ -237,9 +237,9 @@ export default function DashboardHome() {
                 <div className="border-t border-ink/15 pt-3"><p className="text-[10px] uppercase tracking-wider text-muted font-bold">{tr("Unique QR", "QR مستقل")}</p><p className="text-xs font-mono break-all mt-1">/id/{primaryDevice.qrSlug}</p></div>
                 <div className="border-t border-ink/15 pt-3"><p className="text-[10px] uppercase tracking-wider text-muted font-bold">{tr("Public sections", "الأقسام العامة")}</p><p className="text-sm font-semibold mt-1">{Object.values(primaryDevice.display).filter(Boolean).length} {tr("enabled", "مفعلة")}</p></div>
                 <div className="flex flex-wrap gap-2 pt-1">
-                  <button onClick={copyQr} className="min-h-[40px] px-4 border border-ink text-xs font-bold flex items-center gap-2">{copied ? <Check size={14} /> : <Copy size={14} />}{copied ? tr("Copied", "تم النسخ") : tr("Copy link", "نسخ الرابط")}</button>
-                  <a href={qrUrl} target="_blank" rel="noreferrer" className="min-h-[40px] px-4 bg-ink text-bone text-xs font-bold flex items-center gap-2"><ExternalLink size={14} />{tr("Open Emergency ID", "فتح هوية الطوارئ")}</a>
-                  <Link href="/dashboard/devices" className="min-h-[40px] px-4 bg-lime text-ink text-xs font-bold flex items-center gap-2"><Watch size={14} />{tr("Customize QR", "تخصيص QR")}</Link>
+                  <button onClick={copyQr} className="vital-secondary min-h-[40px] px-4 text-xs flex items-center gap-2">{copied ? <Check size={14} /> : <Copy size={14} />}{copied ? tr("Copied", "تم النسخ") : tr("Copy link", "نسخ الرابط")}</button>
+                  <a href={qrUrl} target="_blank" rel="noreferrer" className="vital-primary min-h-[40px] px-4 text-xs flex items-center gap-2"><ExternalLink size={14} />{tr("Open Emergency ID", "فتح هوية الطوارئ")}</a>
+                  <Link href="/dashboard/devices" className="vital-secondary min-h-[40px] px-4 text-xs flex items-center gap-2"><Watch size={14} />{tr("Customize QR", "تخصيص QR")}</Link>
                 </div>
               </div>
             </div>
@@ -247,7 +247,7 @@ export default function DashboardHome() {
             <div className="border border-dashed border-ink/20 bg-bone p-8 text-center">
               <Watch size={32} className="mx-auto text-muted/50 mb-3" />
               <p className="font-bold">{tr("Create a card or wristband ID to get a unique QR.", "أنشئ بطاقة أو سوارًا للحصول على QR مستقل.")}</p>
-              <Link href="/dashboard/devices" className="inline-flex mt-4 min-h-[40px] px-4 bg-ink text-bone text-xs font-bold items-center">{tr("Create Medical ID", "إنشاء هوية طبية")}</Link>
+              <Link href="/dashboard/devices" className="vital-primary inline-flex mt-4 min-h-[40px] px-4 text-xs items-center">{tr("Create Medical ID", "إنشاء هوية طبية")}</Link>
             </div>
           )}
         </section>

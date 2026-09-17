@@ -101,3 +101,17 @@ After v4.5 is deployed, run `supabase/migrations/002_clinical_suggestions.sql` o
 ## Build note
 
 This package was prepared from the user-uploaded v4.4 archive. Static TypeScript syntax parsing passed for all 51 TS/TSX files and all local @/ imports resolved. A full npm build was not run because dependency installation timed out in this environment; Vercel should perform the final production build.
+
+## v4.6 visual refresh
+
+This build keeps the v4.5 medical/doctor functionality and changes the visual system to match the supplied Apple-style reference:
+- near-white #F5F5F7 canvas
+- #1D1D1F typography
+- #0071E3 as the primary interactive color
+- pill primary/secondary actions
+- 8px cards/inputs and hairline borders
+- no card/button shadows
+- desktop dashboard moved from sidebar navigation to a restrained sticky top navigation
+- emergency view simplified for faster scanning
+- existing VITAL ID logo/product assets retained
+- the old AI disclaimer was removed from Medical Record because the current product direction is no-AI backend

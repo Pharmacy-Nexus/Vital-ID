@@ -4,13 +4,13 @@ export default {
   theme: {
     extend: {
       colors: {
-        bone: "#F5F1E8",
-        ink: "#16171B",
-        coral: "#E65B4D",
-        lime: "#B6E36E",
-        aubergine: "#51405D",
-        surface: "#EAE5DA",
-        muted: "#737373"
+        bone: "#F5F5F7",
+        ink: "#1D1D1F",
+        coral: "#D92D20",
+        lime: "#0071E3",
+        aubergine: "#0066CC",
+        surface: "#F4F8FB",
+        muted: "#707070"
       }
     }
   },
