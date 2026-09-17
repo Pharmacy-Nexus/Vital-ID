@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -53,7 +53,7 @@ function timelineIcon(category: string) {
   return Stethoscope;
 }
 
-export default function RecordPage() {
+function RecordPageContent() {
   const patient = useActivePatient();
   const { tr } = useLang();
   const params = useSearchParams();
@@ -260,5 +260,19 @@ export default function RecordPage() {
 
       <DocumentViewer document={viewer} onClose={() => setViewer(null)} />
     </div>
+  );
+}
+
+export default function RecordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="max-w-5xl mx-auto px-5 lg:px-8 pt-8 text-[#707070]">
+          Loading record…
+        </div>
+      }
+    >
+      <RecordPageContent />
+    </Suspense>
   );
 }

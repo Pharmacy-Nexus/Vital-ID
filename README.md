@@ -134,3 +134,6 @@ Run this once after migrations 001 and 002:
 `supabase/migrations/003_temporary_shares.sql`
 
 The migration creates the private `share_links` table with owner-only RLS. Public share reads go through the server using the service role and are rejected after expiry or revocation.
+
+## v4.7.1 build fix
+Wrapped /dashboard/record useSearchParams() inside React Suspense to satisfy Next.js 15 prerender requirements on Vercel. No database changes required.
