@@ -35,9 +35,9 @@ export default function Home() {
       index: "01",
       name: tr("VITAL ID Card", "كارت VITAL ID"),
       variant: tr("Black / everyday carry", "أسود / للاستخدام اليومي"),
-      image: "/brand/vital-card-black-front.png",
-      imageWidth: 1448,
-      imageHeight: 1086,
+      image: "/campaign/card-black-angle.png",
+      imageWidth: 1254,
+      imageHeight: 1254,
       title: tr("DISCREET. READY. ALWAYS WITH YOU.", "هادئ في شكله. جاهز وقت الحاجة."),
       description: tr(
         "A wallet-size medical identity for adults who want something discreet. Tap with NFC or scan the QR to open the same live emergency profile.",
@@ -56,9 +56,9 @@ export default function Home() {
       index: "02",
       name: tr("VITAL ID Card", "كارت VITAL ID"),
       variant: tr("White / high visibility", "أبيض / وضوح أعلى"),
-      image: "/brand/vital-card-white-back.png",
-      imageWidth: 1448,
-      imageHeight: 1086,
+      image: "/campaign/card-white-clean.png",
+      imageWidth: 1254,
+      imageHeight: 1254,
       title: tr("BUILT TO BE NOTICED IN AN EMERGENCY.", "واضح من أول نظرة وقت الطوارئ."),
       description: tr(
         "The high-visibility version puts the emergency purpose, NFC cue and QR front and center — useful when speed and clarity matter more than discretion.",
@@ -133,6 +133,7 @@ export default function Home() {
           </Link>
 
           <div className="nav-center" aria-label="Primary navigation">
+            <a href="#experience">{tr("Experience", "التجربة")}</a>
             <a href="#system">{tr("The system", "النظام")}</a>
             <a href="#privacy">{tr("Privacy", "الخصوصية")}</a>
             <a href="#objects">{tr("Objects", "المنتجات")}</a>
@@ -202,9 +203,9 @@ export default function Home() {
                 <span>{tr("TAP", "المس")}</span>
               </div>
               <Image
-                src="/brand/vital-card-black-front.png"
-                width={1448}
-                height={1086}
+                src="/campaign/card-black-hero.png"
+                width={1254}
+                height={1254}
                 alt="Black VITAL ID NFC medical card"
                 className="hero-card"
                 priority
@@ -224,6 +225,66 @@ export default function Home() {
             <span>{tr("NO APP REQUIRED", "من غير تطبيق")}</span>
           </div>
         </div>
+      </section>
+
+      <section id="experience" className="campaign-experience">
+        <div className="campaign-transition" aria-hidden="true" />
+        <div className="editorial-shell campaign-experience-head">
+          <motion.div
+            initial={{ opacity: 0, y: 34 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.35 }}
+            transition={{ duration: 0.7, ease: [0.2, 0.75, 0.2, 1] }}
+            className="campaign-experience-copy"
+          >
+            <span className="campaign-eyebrow">VITAL ID / 00</span>
+            <h2>{tr("SEE THE MOMENT\nBEFORE IT MATTERS.", "شوف اللحظة\nقبل ما تحتاجها.")}</h2>
+            <p>
+              {tr(
+                "The card is only the key. Tap or scan, and the emergency identity opens instantly in the browser — while the fuller medical record stays protected.",
+                "الكارت هو المفتاح بس. لمسة أو مسح يفتح هوية الطوارئ فورًا في المتصفح — بينما الملف الطبي الكامل يفضل محمي."
+              )}
+            </p>
+          </motion.div>
+
+          <motion.div
+            className="campaign-lineup-wrap"
+            initial={{ opacity: 0, scale: 0.94, y: 44 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.25 }}
+            transition={{ duration: 0.9, delay: 0.08, ease: [0.2, 0.75, 0.2, 1] }}
+          >
+            <Image
+              src="/campaign/card-lineup.png"
+              width={1122}
+              height={1402}
+              alt="Black and white VITAL ID medical cards"
+              className="campaign-lineup"
+            />
+          </motion.div>
+        </div>
+
+        <motion.div
+          className="cinematic-shell"
+          initial={{ opacity: 0, y: 60, scale: 0.97 }}
+          whileInView={{ opacity: 1, y: 0, scale: 1 }}
+          viewport={{ once: true, amount: 0.12 }}
+          transition={{ duration: 0.9, ease: [0.2, 0.75, 0.2, 1] }}
+        >
+          <div className="cinematic-topline">
+            <span>{tr("THE VITAL ID FILM", "فيلم VITAL ID")}</span>
+            <span>{tr("NFC → EMERGENCY PROFILE", "NFC ← ملف الطوارئ")}</span>
+          </div>
+          <div className="cinematic-frame">
+            <iframe
+              src="/cinematic/index.html?loop=1&controls=0&autoplay=1"
+              title="VITAL ID cinematic product experience"
+              loading="lazy"
+              allow="autoplay; fullscreen"
+            />
+            <div className="cinematic-glass" aria-hidden="true" />
+          </div>
+        </motion.div>
       </section>
 
       <section id="system" className="system-section dark-section">
@@ -262,9 +323,9 @@ export default function Home() {
           <div className="system-visual">
             <div className="system-card-wrap">
               <Image
-                src="/brand/vital-card-white-back.png"
-                width={1448}
-                height={1086}
+                src="/campaign/card-white-angle.png"
+                width={1254}
+                height={1254}
                 alt="White VITAL ID card with NFC and QR"
                 className="system-card"
               />
@@ -358,6 +419,72 @@ export default function Home() {
                 <span className="status-dot aubergine-dot" />
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="campaign-gallery-section">
+        <div className="editorial-shell">
+          <div className="campaign-gallery-head">
+            <motion.div
+              initial={{ opacity: 0, y: 28 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.4 }}
+              transition={{ duration: 0.65 }}
+            >
+              <span className="campaign-gallery-kicker">{tr("THE OBJECT IN YOUR POCKET", "الهوية اللي معاك")}</span>
+              <h2>{tr("BLACK OR WHITE.\nTHE SAME MEDICAL IDENTITY.", "أسود أو أبيض.\nنفس الهوية الطبية.")}</h2>
+            </motion.div>
+            <p>
+              {tr(
+                "Choose the physical style that fits you. Both connect to the same live profile, the same emergency view and the same protected record.",
+                "اختار الشكل اللي يناسبك. الاتنين بيوصلوا لنفس الملف المحدث، ونفس واجهة الطوارئ، ونفس السجل المحمي."
+              )}
+            </p>
+          </div>
+
+          <div className="campaign-photo-grid">
+            <motion.figure
+              className="campaign-photo campaign-photo-dark campaign-photo-wide"
+              initial={{ opacity: 0, x: -36 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, amount: 0.25 }}
+              transition={{ duration: 0.75, ease: [0.2, 0.75, 0.2, 1] }}
+            >
+              <Image src="/campaign/card-black-angle.png" width={1254} height={1254} alt="Black VITAL ID emergency medical card" />
+              <figcaption>
+                <span>{tr("BLACK / DISCREET", "أسود / هادي")}</span>
+                <strong>{tr("Made to live in your wallet.", "مصمم يفضل في محفظتك.")}</strong>
+              </figcaption>
+            </motion.figure>
+
+            <motion.figure
+              className="campaign-photo campaign-photo-light"
+              initial={{ opacity: 0, y: 42 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.25 }}
+              transition={{ duration: 0.75, delay: 0.08, ease: [0.2, 0.75, 0.2, 1] }}
+            >
+              <Image src="/campaign/card-white-clean.png" width={1254} height={1254} alt="White VITAL ID emergency medical card" />
+              <figcaption>
+                <span>{tr("WHITE / VISIBLE", "أبيض / واضح")}</span>
+                <strong>{tr("Easy to recognize when seconds count.", "سهل يتعرف عليه وقت ما الثواني تفرق.")}</strong>
+              </figcaption>
+            </motion.figure>
+
+            <motion.figure
+              className="campaign-photo campaign-photo-light"
+              initial={{ opacity: 0, x: 36 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, amount: 0.25 }}
+              transition={{ duration: 0.75, delay: 0.14, ease: [0.2, 0.75, 0.2, 1] }}
+            >
+              <Image src="/campaign/card-white-angle.png" width={1254} height={1254} alt="Angled white VITAL ID medical card" />
+              <figcaption>
+                <span>NFC + QR</span>
+                <strong>{tr("Two ways in. One live identity.", "طريقتين للوصول. هوية واحدة محدثة.")}</strong>
+              </figcaption>
+            </motion.figure>
           </div>
         </div>
       </section>
