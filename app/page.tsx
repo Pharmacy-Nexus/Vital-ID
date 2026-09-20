@@ -259,11 +259,58 @@ export default function Home() {
         </motion.div>
 
         <div className="v2-container v2-film-lineup">
-          <motion.div {...reveal} className="v2-lineup-copy">
-            <span>{tr("ONE MEDICAL IDENTITY", "هوية طبية واحدة")}</span>
-            <strong>{tr("Different ways to carry it.", "أكتر من طريقة تحملها معاك.")}</strong>
+          <motion.div
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, amount: 0.35 }}
+            variants={{
+              hidden: {},
+              show: { transition: { staggerChildren: 0.34, delayChildren: 0.12 } },
+            }}
+            className="v2-lineup-copy"
+          >
+            <motion.span
+              variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: { duration: 0.55, ease } } }}
+              className="v2-lineup-kicker"
+            >
+              {tr("ONE MEDICAL IDENTITY", "هوية طبية واحدة")}
+            </motion.span>
+
+            <div className="v2-lineup-story" aria-label={tr("What VITAL ID keeps ready", "إيه اللي VITAL ID بيخليه جاهز")}>
+              {[
+                tr("Emergency information.", "معلومات الطوارئ."),
+                tr("Your medical files.", "ملفاتك الطبية."),
+                tr("Temporary doctor access.", "وصول مؤقت للطبيب."),
+                tr("One identity. Always with you.", "هوية واحدة. معاك دايمًا."),
+              ].map((line, index) => (
+                <motion.p
+                  key={line}
+                  variants={{
+                    hidden: { opacity: 0, y: 24, filter: "blur(5px)" },
+                    show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.68, ease } },
+                  }}
+                  className={index === 3 ? "v2-lineup-line v2-lineup-line-final" : "v2-lineup-line"}
+                >
+                  {line}
+                </motion.p>
+              ))}
+            </div>
+
+            <motion.strong
+              variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { duration: 0.5, ease } } }}
+              className="v2-lineup-footnote"
+            >
+              {tr("Card or wearable. The same medical identity behind it.", "كارت أو سوار. ونفس الهوية الطبية وراهم.")}
+            </motion.strong>
           </motion.div>
-          <motion.div {...reveal} transition={{ duration: 0.72, delay: 0.12, ease }} className="v2-lineup-image">
+
+          <motion.div
+            initial={{ opacity: 0, x: 54, scale: 0.96 }}
+            whileInView={{ opacity: 1, x: 0, scale: 1 }}
+            viewport={{ once: true, amount: 0.28 }}
+            transition={{ duration: 0.92, delay: 0.16, ease }}
+            className="v2-lineup-image"
+          >
             <Image src="/campaign/card-lineup.png" width={1122} height={1402} alt="Black and white VITAL ID medical cards" />
           </motion.div>
         </div>
@@ -352,7 +399,9 @@ export default function Home() {
                 <span>{tr("CARD / BLACK", "كارت / أسود")}</span>
                 <h3>{tr("Discreet everyday carry.", "هادي ومناسب للاستخدام اليومي.")}</h3>
               </div>
-              <Image src="/campaign/card-black-angle.png" width={1254} height={1254} alt="Black VITAL ID card" />
+              <div className="v2-product-media v2-product-media-card">
+                <Image className="v2-product-image" src="/campaign/card-black-angle.png" width={1254} height={1254} alt="Black VITAL ID card" />
+              </div>
             </motion.article>
 
             <motion.article {...reveal} transition={{ duration: 0.72, delay: 0.08, ease }} className="v2-product-card v2-product-light">
@@ -360,7 +409,9 @@ export default function Home() {
                 <span>{tr("CARD / WHITE", "كارت / أبيض")}</span>
                 <h3>{tr("Visible when clarity matters.", "واضح لما السرعة والوضوح يفرقوا.")}</h3>
               </div>
-              <Image src="/campaign/card-white-angle.png" width={1254} height={1254} alt="White VITAL ID card" />
+              <div className="v2-product-media v2-product-media-card">
+                <Image className="v2-product-image" src="/campaign/card-white-angle.png" width={1254} height={1254} alt="White VITAL ID card" />
+              </div>
             </motion.article>
 
             <motion.article {...reveal} className="v2-product-card v2-product-wearable">
@@ -368,7 +419,9 @@ export default function Home() {
                 <span>{tr("WRISTBAND / ADULT", "سوار / للكبار")}</span>
                 <h3>{tr("Always visible. Always on you.", "ظاهر. ومعاك طول الوقت.")}</h3>
               </div>
-              <Image src="/brand/vital-wristband-black.png" width={1254} height={1254} alt="Black VITAL ID wristband" />
+              <div className="v2-product-media v2-product-media-wearable">
+                <Image className="v2-product-image" src="/brand/vital-wristband-black.png" width={1254} height={1254} alt="Black VITAL ID wristband" />
+              </div>
             </motion.article>
 
             <motion.article {...reveal} transition={{ duration: 0.72, delay: 0.08, ease }} className="v2-product-card v2-product-kids">
@@ -376,7 +429,9 @@ export default function Home() {
                 <span>{tr("WRISTBAND / KIDS", "سوار / للأطفال")}</span>
                 <h3>{tr("Guardian-managed. Child-friendly.", "ولي الأمر يديره. ومناسب للطفل.")}</h3>
               </div>
-              <Image src="/brand/vital-wristband-kids.png" width={1254} height={1254} alt="Kids VITAL ID wristband" />
+              <div className="v2-product-media v2-product-media-wearable">
+                <Image className="v2-product-image" src="/brand/vital-wristband-kids.png" width={1254} height={1254} alt="Kids VITAL ID wristband" />
+              </div>
             </motion.article>
           </div>
         </div>

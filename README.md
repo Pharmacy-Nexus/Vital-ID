@@ -137,3 +137,9 @@ The migration creates the private `share_links` table with owner-only RLS. Publi
 
 ## v4.7.1 build fix
 Wrapped /dashboard/record useSearchParams() inside React Suspense to satisfy Next.js 15 prerender requirements on Vercel. No database changes required.
+
+## v5.1 — Showcase polish before dashboard redesign
+- Dark lineup copy now reveals sequentially instead of appearing as one block.
+- Product lineup image/text proportions were rebalanced.
+- Card and wristband product images now use normalized contained media stages for consistent dimensions on desktop and mobile.
+- No dashboard/backend/database changes in this pass.
