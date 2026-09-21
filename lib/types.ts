@@ -23,6 +23,23 @@ export type ConditionItem = {
   visibility?: Visibility;
 };
 
+export type MedicationScheduleDose = {
+  id: string;
+  time: string;
+  dose: string;
+  mealRelation: "any" | "before" | "with" | "after";
+  note?: string;
+};
+
+export type MedicationSchedule = {
+  enabled: boolean;
+  days: "daily" | "selected";
+  selectedDays?: number[];
+  startDate?: string;
+  endDate?: string;
+  doses: MedicationScheduleDose[];
+};
+
 export type MedicationItem = {
   id: string;
   name: string;
@@ -33,6 +50,7 @@ export type MedicationItem = {
   confirmedAt: string;
   freshness: Freshness;
   visibility?: Visibility;
+  schedule?: MedicationSchedule;
 };
 
 export type AllergyItem = {

@@ -1839,3 +1839,10 @@ html[dir="rtl"] .v2-eyebrow { letter-spacing: 0; }
   .v2-btn,
   .v2-nav-cta { transition: none !important; }
 }
+
+
+@media print {
+  body * { visibility: hidden !important; }
+  .medication-print-area, .medication-print-area * { visibility: visible !important; }
+  .medication-print-area { position: absolute !important; inset: 0 auto auto 0 !important; width: 100% !important; border: 0 !important; }
+}

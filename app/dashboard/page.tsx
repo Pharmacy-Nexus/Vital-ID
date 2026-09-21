@@ -21,6 +21,8 @@ import {
   Watch,
   Share2,
   Upload,
+  Search,
+  CalendarDays,
 } from "lucide-react";
 import ProfilePhoto from "@/components/ui/ProfilePhoto";
 import { deleteLocalFile, saveLocalFile } from "@/lib/fileStore";
@@ -29,6 +31,8 @@ import { savePatient, useActivePatient } from "@/lib/patientStore";
 import { useLang } from "@/components/ui/LangProvider";
 import { useDevices } from "@/lib/deviceStore";
 import { loadClinicalSuggestions } from "@/lib/cloud/repository";
+import FeatureInfo from "@/components/ui/FeatureInfo";
+import MedicalFileThumbnail from "@/components/documents/MedicalFileThumbnail";
 
 async function optimizeProfilePhoto(file: File) {
   if (!file.type.startsWith("image/")) throw new Error("not_image");
@@ -173,10 +177,34 @@ export default function DashboardHome() {
         </div>
       </header>
 
-      <section className="grid md:grid-cols-3 gap-px bg-[#d2d2d7] border border-[#d2d2d7] mb-5">
-        <Link href="/dashboard/record?tab=files&add=1" className="bg-white p-5 hover:bg-[#f4f8fb] transition-colors"><Upload size={18}/><p className="font-semibold mt-3">{tr("Add medical file", "إضافة ملف طبي")}</p><p className="text-xs text-[#707070] mt-1">{tr("Lab, scan, prescription or report", "تحليل أو أشعة أو روشتة أو تقرير")}</p></Link>
-        <Link href="/dashboard/share" className="bg-white p-5 hover:bg-[#f4f8fb] transition-colors"><Share2 size={18}/><p className="font-semibold mt-3">{tr("Share with doctor", "مشاركة مع طبيب")}</p><p className="text-xs text-[#707070] mt-1">{tr("Create a temporary QR", "إنشاء QR مؤقت")}</p></Link>
-        <Link href={qrUrl || "/dashboard/devices"} className="bg-white p-5 hover:bg-[#f4f8fb] transition-colors"><ShieldCheck size={18}/><p className="font-semibold mt-3">{tr("Preview Emergency ID", "معاينة هوية الطوارئ")}</p><p className="text-xs text-[#707070] mt-1">{tr("See exactly what others can view", "شاهد بالضبط ما يمكن للآخرين رؤيته")}</p></Link>
+      <section className="mb-5 border border-[#d2d2d7] bg-white p-4 lg:p-5">
+        <div className="mb-3 flex items-center gap-2">
+          <p className="text-sm font-semibold">{tr("Find a medical file", "ابحث عن ملف طبي")}</p>
+          <FeatureInfo title={tr("Medical file search", "البحث في الملفات الطبية")} description={tr("Search the title, hospital or lab, date, file type or original filename. Results open inside your Medical Vault.", "ابحث بعنوان الملف أو المستشفى أو المعمل أو التاريخ أو النوع أو اسم الملف الأصلي. النتائج تفتح داخل خزنة الملفات الطبية.")} align="left" />
+        </div>
+        <form action="/dashboard/record" className="flex gap-2">
+          <input type="hidden" name="tab" value="files" />
+          <div className="relative flex-1"><Search size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#858585]"/><input name="q" className="min-h-[46px] w-full border border-[#d2d2d7] bg-[#f5f5f7] pl-10 pr-4 text-sm outline-none focus:border-[#0071e3]" placeholder={tr("Search reports, scans, prescriptions…", "ابحث في التقارير والأشعة والروشتات…")} /></div>
+          <button className="vital-primary min-h-[46px] px-5 text-sm" type="submit">{tr("Search", "بحث")}</button>
+        </form>
+      </section>
+
+      <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-[#d2d2d7] border border-[#d2d2d7] mb-5">
+        <div className="relative bg-white p-5 hover:bg-[#f4f8fb] transition-colors"><div className="flex items-start justify-between gap-3"><Upload size={18}/><FeatureInfo title={tr("Add medical file", "إضافة ملف طبي")} description={tr("Upload a lab, radiology image, prescription, discharge report or other medical file and keep the original attached to your record.", "ارفع تحليلًا أو صورة أشعة أو روشتة أو تقرير خروج أو أي ملف طبي واحتفظ بالأصل مرتبطًا بسجلك.")} /></div><Link href="/dashboard/record?tab=files&add=1" className="absolute inset-0" aria-label={tr("Add medical file", "إضافة ملف طبي")} /><p className="font-semibold mt-3">{tr("Add medical file", "إضافة ملف طبي")}</p><p className="text-xs text-[#707070] mt-1">{tr("Lab, scan, prescription or report", "تحليل أو أشعة أو روشتة أو تقرير")}</p></div>
+        <div className="relative bg-white p-5 hover:bg-[#f4f8fb] transition-colors"><div className="flex items-start justify-between gap-3"><Share2 size={18}/><FeatureInfo title={tr("Share with doctor", "مشاركة مع طبيب")} description={tr("Create a temporary QR or link and choose whether to share emergency information, a summary or the full record.", "أنشئ QR أو رابطًا مؤقتًا واختر مشاركة معلومات الطوارئ أو الملخص أو السجل الكامل.")} /></div><Link href="/dashboard/share" className="absolute inset-0" aria-label={tr("Share with doctor", "مشاركة مع طبيب")} /><p className="font-semibold mt-3">{tr("Share with doctor", "مشاركة مع طبيب")}</p><p className="text-xs text-[#707070] mt-1">{tr("Create a temporary QR", "إنشاء QR مؤقت")}</p></div>
+        <div className="relative bg-white p-5 hover:bg-[#f4f8fb] transition-colors"><div className="flex items-start justify-between gap-3"><ShieldCheck size={18}/><FeatureInfo title={tr("Emergency ID preview", "معاينة هوية الطوارئ")} description={tr("Open exactly what another person sees after scanning your active card or wristband QR.", "افتح بالضبط ما يراه أي شخص بعد مسح QR الخاص بالكارت أو السوار المفعّل.")} /></div><Link href={qrUrl || "/dashboard/devices"} className="absolute inset-0" aria-label={tr("Preview Emergency ID", "معاينة هوية الطوارئ")} /><p className="font-semibold mt-3">{tr("Preview Emergency ID", "معاينة هوية الطوارئ")}</p><p className="text-xs text-[#707070] mt-1">{tr("See exactly what others can view", "شاهد بالضبط ما يمكن للآخرين رؤيته")}</p></div>
+        <div className="relative bg-white p-5 hover:bg-[#f4f8fb] transition-colors"><div className="flex items-start justify-between gap-3"><CalendarDays size={18}/><FeatureInfo title={tr("Medication plan", "جدول الأدوية")} description={tr("Enter the prescribed dose times yourself and VITAL arranges all medicines into one clear daily table. It does not choose medical timing or doses.", "أدخل مواعيد الجرعات الموصوفة بنفسك وVITAL يرتب كل الأدوية في جدول يومي واضح. لا يختار المواعيد الطبية أو الجرعات.")} /></div><Link href="/dashboard/record?tab=medications" className="absolute inset-0" aria-label={tr("Medication plan", "جدول الأدوية")} /><p className="font-semibold mt-3">{tr("Medication plan", "جدول الأدوية")}</p><p className="text-xs text-[#707070] mt-1">{tr("Organize prescribed times", "نظّم المواعيد الموصوفة")}</p></div>
+      </section>
+
+      <section className="mb-5 border border-[#d2d2d7] bg-white p-5 lg:p-6">
+        <div className="mb-4 flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2"><h2 className="text-xl font-semibold">{tr("Recent medical files", "أحدث الملفات الطبية")}</h2><FeatureInfo title={tr("Recent medical files", "أحدث الملفات الطبية")} description={tr("A visual preview of your newest uploaded images and documents. Tap a file to jump to it in the Medical Vault.", "معاينة مرئية لأحدث الصور والمستندات التي رفعتها. اضغط على الملف للانتقال إليه داخل خزنة الملفات الطبية.")} align="left" /></div>
+            <p className="mt-1 text-xs text-[#707070]">{tr("Photos are shown as thumbnails so you can recognize them faster.", "الصور تظهر كمعاينات مصغرة لتتعرف عليها بشكل أسرع.")}</p>
+          </div>
+          <Link href="/dashboard/record?tab=files" className="shrink-0 text-xs font-semibold text-[#0066cc]">{tr("View all", "عرض الكل")}</Link>
+        </div>
+        {patient.documents.length === 0 ? <div className="border border-dashed border-[#d2d2d7] p-6 text-center"><FileText size={24} className="mx-auto text-[#858585]"/><p className="mt-2 text-sm text-[#707070]">{tr("Your uploaded files will appear here.", "الملفات التي ترفعها ستظهر هنا.")}</p></div> : <div className="grid grid-cols-2 gap-3 md:grid-cols-4">{patient.documents.slice(0,4).map((doc) => <Link key={doc.id} href={`/dashboard/record?tab=files&q=${encodeURIComponent(doc.title)}`} className="group overflow-hidden border border-[#d2d2d7] bg-white"><div className="aspect-[4/3] overflow-hidden bg-[#f5f5f7]"><MedicalFileThumbnail document={doc}/></div><div className="border-t border-[#ececef] p-3"><p className="truncate text-xs font-semibold">{doc.title}</p><p className="mt-1 truncate text-[10px] text-[#858585]">{doc.date} · {doc.provider}</p></div></Link>)}</div>}
       </section>
 
       <div className="grid lg:grid-cols-12 gap-5">
@@ -208,8 +236,8 @@ export default function DashboardHome() {
           {photoMessage && <p className="mt-4 text-xs text-[#0066cc]">{photoMessage}</p>}
 
           <div className="mt-7 grid grid-cols-2 gap-px bg-[#d2d2d7] border border-[#d2d2d7] rounded-lg overflow-hidden">
-            <div className="bg-[#f5f5f7] p-4"><p className="text-[11px] text-[#707070]">{tr("Emergency profile", "ملف الطوارئ")}</p><p className="text-2xl font-semibold mt-1 text-[#0071e3]">{emergencyCompleteness}%</p></div>
-            <div className="bg-[#f5f5f7] p-4"><p className="text-[11px] text-[#707070]">{tr("Full record", "السجل الكامل")}</p><p className="text-2xl font-semibold mt-1">{recordCompleteness}%</p></div>
+            <div className="bg-[#f5f5f7] p-4"><div className="flex items-center justify-between gap-2"><p className="text-[11px] text-[#707070]">{tr("Emergency profile", "ملف الطوارئ")}</p><FeatureInfo title={tr("Emergency profile completeness", "اكتمال ملف الطوارئ")} description={tr("Checks whether the key information used by the Emergency ID has been filled in, such as identity, blood type, emergency contact and at least one important medical item.", "يقيس ما إذا كانت المعلومات الأساسية لهوية الطوارئ مكتملة مثل الهوية وفصيلة الدم وجهة اتصال الطوارئ ومعلومة طبية مهمة واحدة على الأقل.")} /></div><p className="text-2xl font-semibold mt-1 text-[#0071e3]">{emergencyCompleteness}%</p></div>
+            <div className="bg-[#f5f5f7] p-4"><div className="flex items-center justify-between gap-2"><p className="text-[11px] text-[#707070]">{tr("Full record", "السجل الكامل")}</p><FeatureInfo title={tr("Full record completeness", "اكتمال السجل الكامل")} description={tr("A simple progress indicator based on whether the main record sections contain information. It is not a medical quality score.", "مؤشر تقدم بسيط حسب وجود بيانات في أقسام السجل الرئيسية، وليس تقييمًا طبيًا لجودة السجل.")} /></div><p className="text-2xl font-semibold mt-1">{recordCompleteness}%</p></div>
           </div>
 
           <div className="mt-5 space-y-3 text-sm">
@@ -230,7 +258,7 @@ export default function DashboardHome() {
           <div className="flex items-start justify-between gap-4 mb-5">
             <div>
               <p className="text-[10px] uppercase tracking-[.2em] font-bold text-aubergine">{tr("LIVE EMERGENCY ID", "هوية الطوارئ المباشرة")}</p>
-              <h2 className="text-2xl font-bold mt-1">{primaryDevice ? primaryDevice.name : tr("No active ID yet", "لا توجد هوية مفعلة")}</h2>
+              <div className="mt-1 flex items-center gap-2"><h2 className="text-2xl font-bold">{primaryDevice ? primaryDevice.name : tr("No active ID yet", "لا توجد هوية مفعلة")}</h2><FeatureInfo title={tr("Live Emergency ID", "هوية الطوارئ المباشرة")} description={tr("This QR opens the public emergency view for the active device. Only information you allow is shown there.", "هذا الـQR يفتح عرض الطوارئ العام للجهاز المفعّل، ولا تظهر فيه إلا المعلومات التي تسمح بها.")} align="left" /></div>
               <p className="text-sm text-muted mt-1">{tr("This is the QR another phone can scan to see the information you allow.", "هذا هو QR الذي يمكن لأي هاتف مسحه لعرض المعلومات التي تسمح بها.")}</p>
             </div>
             {primaryDevice && <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-1 ${primaryDevice.status === "active" ? "bg-lime/20" : "bg-coral/10 text-coral"}`}>{primaryDevice.status === "active" ? tr("Active", "نشط") : tr("Disabled", "معطل")}</span>}
@@ -262,15 +290,15 @@ export default function DashboardHome() {
       </div>
 
       <section className="grid md:grid-cols-3 gap-px bg-ink/10 border border-ink/10 mt-5">
-        <Link href="/dashboard/record" className="bg-white p-5 hover:bg-lime/10 transition-colors"><AlertTriangle size={19} className="text-coral"/><p className="text-[10px] uppercase tracking-wider text-muted font-bold mt-4">{tr("Allergies", "الحساسية")}</p><p className="text-xl font-bold mt-1">{publicAllergies.length ? publicAllergies.map((a) => a.allergen).slice(0, 2).join(" · ") : tr("None added", "لا يوجد")}</p></Link>
-        <Link href="/dashboard/record" className="bg-white p-5 hover:bg-lime/10 transition-colors"><HeartPulse size={19} className="text-aubergine"/><p className="text-[10px] uppercase tracking-wider text-muted font-bold mt-4">{tr("Active conditions", "الحالات النشطة")}</p><p className="text-xl font-bold mt-1">{activeConditions.length ? activeConditions.map((c) => c.name).slice(0, 2).join(" · ") : tr("None added", "لا يوجد")}</p></Link>
-        <Link href="/dashboard/record" className="bg-white p-5 hover:bg-lime/10 transition-colors"><Pill size={19}/><p className="text-[10px] uppercase tracking-wider text-muted font-bold mt-4">{tr("Medications", "الأدوية")}</p><p className="text-xl font-bold mt-1">{patient.medications.length ? patient.medications.slice(0, 2).map((m) => m.name).join(" · ") : tr("None added", "لا يوجد")}</p></Link>
+        <div className="relative bg-white p-5 hover:bg-lime/10 transition-colors"><div className="flex items-start justify-between gap-3"><AlertTriangle size={19} className="text-coral"/><FeatureInfo title={tr("Allergies", "الحساسية")} description={tr("Shows the allergies currently saved in the medical record. Public emergency visibility is controlled from the medical details page.", "يعرض الحساسية المحفوظة حاليًا في السجل الطبي، ويمكن التحكم في ظهورها بالطوارئ من صفحة البيانات الطبية.")} /></div><Link href="/dashboard/record" className="absolute inset-0" aria-label={tr("Allergies", "الحساسية")}/><p className="text-[10px] uppercase tracking-wider text-muted font-bold mt-4">{tr("Allergies", "الحساسية")}</p><p className="text-xl font-bold mt-1">{publicAllergies.length ? publicAllergies.map((a) => a.allergen).slice(0, 2).join(" · ") : tr("None added", "لا يوجد")}</p></div>
+        <div className="relative bg-white p-5 hover:bg-lime/10 transition-colors"><div className="flex items-start justify-between gap-3"><HeartPulse size={19} className="text-aubergine"/><FeatureInfo title={tr("Active conditions", "الحالات النشطة")} description={tr("Shows medical conditions currently marked active in the record.", "يعرض الحالات المرضية المحددة حاليًا على أنها نشطة في السجل.")} /></div><Link href="/dashboard/record" className="absolute inset-0" aria-label={tr("Active conditions", "الحالات النشطة")}/><p className="text-[10px] uppercase tracking-wider text-muted font-bold mt-4">{tr("Active conditions", "الحالات النشطة")}</p><p className="text-xl font-bold mt-1">{activeConditions.length ? activeConditions.map((c) => c.name).slice(0, 2).join(" · ") : tr("None added", "لا يوجد")}</p></div>
+        <div className="relative bg-white p-5 hover:bg-lime/10 transition-colors"><div className="flex items-start justify-between gap-3"><Pill size={19}/><FeatureInfo title={tr("Medications", "الأدوية")} description={tr("Shows medicines saved in the record. Open it to build or review your medication schedule.", "يعرض الأدوية المحفوظة في السجل، ويمكنك فتحه لإنشاء أو مراجعة جدول الأدوية.")} /></div><Link href="/dashboard/record?tab=medications" className="absolute inset-0" aria-label={tr("Medication plan", "جدول الأدوية")}/><p className="text-[10px] uppercase tracking-wider text-muted font-bold mt-4">{tr("Medications", "الأدوية")}</p><p className="text-xl font-bold mt-1">{patient.medications.length ? patient.medications.slice(0, 2).map((m) => m.name).join(" · ") : tr("None added", "لا يوجد")}</p></div>
       </section>
 
       <div className="grid lg:grid-cols-12 gap-5 mt-5">
         <section className="lg:col-span-8 bg-white border border-ink/10 p-6">
           <div className="flex items-center justify-between mb-5">
-            <div><p className="text-[10px] uppercase tracking-[.2em] font-bold text-aubergine">{tr("ACTIVITY", "النشاط")}</p><h2 className="text-xl font-bold mt-1">{tr("Recent events", "آخر الأحداث")}</h2></div>
+            <div><p className="text-[10px] uppercase tracking-[.2em] font-bold text-aubergine">{tr("ACTIVITY", "النشاط")}</p><div className="mt-1 flex items-center gap-2"><h2 className="text-xl font-bold">{tr("Recent events", "آخر الأحداث")}</h2><FeatureInfo title={tr("Activity log", "سجل النشاط")} description={tr("Shows recorded scans, access events and important changes so you can review what happened around your medical identity.", "يعرض عمليات المسح والوصول والتغييرات المهمة المسجلة لتراجع ما حدث حول هويتك الطبية.")} align="left" /></div></div>
             <Link href="/dashboard/activity" className="text-xs font-bold underline underline-offset-4">{tr("View all", "عرض الكل")}</Link>
           </div>
           {activity.length === 0 ? (
@@ -289,7 +317,7 @@ export default function DashboardHome() {
         </section>
 
         <section className="lg:col-span-4 border border-ink/10 bg-[#efebe1] p-6">
-          <p className="text-[10px] uppercase tracking-[.2em] font-bold text-aubergine">{tr("QUICK STATUS", "الحالة السريعة")}</p>
+          <div className="flex items-center gap-2"><p className="text-[10px] uppercase tracking-[.2em] font-bold text-aubergine">{tr("QUICK STATUS", "الحالة السريعة")}</p><FeatureInfo title={tr("Quick status", "الحالة السريعة")} description={tr("A compact check of doctor access, clinician suggestions, emergency contact, profile photo and recorded QR scans.", "نظرة مختصرة على وصول الطبيب واقتراحات الطبيب وجهة اتصال الطوارئ وصورة الملف ومرات فتح QR المسجلة.")} align="left" /></div>
           <div className="mt-5 space-y-5">
             <div className="flex items-start gap-3"><Stethoscope size={19} className="text-aubergine shrink-0"/><div><p className="font-bold text-sm">{tr("Doctor access", "وصول الطبيب")}</p><p className="text-xs text-muted mt-1">{tr("Temporary access is available from the Emergency ID.", "الوصول المؤقت متاح من هوية الطوارئ.")}</p></div></div>
             <Link href="/dashboard/review" className="flex items-start gap-3 group"><ClipboardCheck size={19} className="text-aubergine shrink-0"/><div><p className="font-bold text-sm group-hover:underline">{tr("Clinician updates", "تحديثات الطبيب")}</p><p className="text-xs text-muted mt-1">{pendingClinicianUpdates > 0 ? `${pendingClinicianUpdates} ${tr("waiting for your approval", "بانتظار موافقتك")}` : tr("No updates waiting for review", "لا توجد تحديثات تنتظر المراجعة")}</p></div></Link>
