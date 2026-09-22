@@ -29,7 +29,7 @@ scene.add(cameraRig);
 cameraRig.add(camera);
 
 const renderer = new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.25));
 renderer.setSize(innerWidth,innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -550,23 +550,37 @@ addEventListener('keydown',e=>{
 function resize(){
   camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
   renderer.setSize(innerWidth,innerHeight);
-  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.setPixelRatio(Math.min(devicePixelRatio,1.25));
   composer.setSize(innerWidth,innerHeight);
   buildTimeline();positionEffects();
 }
 addEventListener('resize',()=>{clearTimeout(window.__vitalResize);window.__vitalResize=setTimeout(resize,120)});
 
 const clock=new THREE.Clock();
-renderer.setAnimationLoop(()=>{
+let renderActive = !document.hidden;
+let lastFrame = 0;
+const TARGET_FRAME_MS = 1000 / 30; // 30 FPS is plenty for this embedded cinematic.
+
+function setRenderActive(active){
+  renderActive = Boolean(active) && !document.hidden;
+  if(renderActive) clock.start();
+  else clock.stop();
+}
+
+document.addEventListener('visibilitychange',()=>setRenderActive(!document.hidden));
+window.addEventListener('message',(event)=>{
+  if(event.source !== window.parent) return;
+  if(event.data?.type === 'vital-cinematic-visibility') setRenderActive(event.data.visible);
+});
+
+renderer.setAnimationLoop((now)=>{
+  if(!renderActive || now-lastFrame < TARGET_FRAME_MS) return;
+  lastFrame=now;
   const t=clock.getElapsedTime();
   world.userData.points.rotation.y=t*.006;
   world.userData.points.rotation.z=Math.sin(t*.14)*.012;
-  if(card){
-    card.userData.glow.material.opacity=.095+Math.sin(t*1.8)*.018;
-  }
-  if(phone){
-    phone.userData.glow.material.opacity=.075+Math.sin(t*1.25+.6)*.015;
-  }
+  if(card) card.userData.glow.material.opacity=.095+Math.sin(t*1.8)*.018;
+  if(phone) phone.userData.glow.material.opacity=.075+Math.sin(t*1.25+.6)*.015;
   composer.render();
 });
 

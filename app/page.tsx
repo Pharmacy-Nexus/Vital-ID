@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
@@ -40,6 +41,21 @@ function ArrowLink({ href, children }: { href: string; children: React.ReactNode
 
 export default function Home() {
   const { tr } = useLang();
+  const cinematicRef = useRef<HTMLIFrameElement>(null);
+
+  useEffect(() => {
+    const iframe = cinematicRef.current;
+    if (!iframe) return;
+    const sendVisibility = (visible: boolean) =>
+      iframe.contentWindow?.postMessage({ type: "vital-cinematic-visibility", visible }, window.location.origin);
+    const observer = new IntersectionObserver(
+      ([entry]) => sendVisibility(entry.isIntersecting && entry.intersectionRatio > 0.05),
+      { threshold: [0, 0.05, 0.25] }
+    );
+    observer.observe(iframe);
+    iframe.addEventListener("load", () => sendVisibility(false), { once: true });
+    return () => observer.disconnect();
+  }, []);
 
   const audiences = [
     {
@@ -250,7 +266,8 @@ export default function Home() {
           className="v2-film-frame"
         >
           <iframe
-            src="/cinematic/index.html?loop=1&controls=0&autoplay=1"
+            ref={cinematicRef}
+            src="/cinematic/index.html?loop=0&controls=0&autoplay=1"
             title="VITAL ID cinematic product experience"
             loading="lazy"
             allow="autoplay; fullscreen"
