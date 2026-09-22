@@ -7,7 +7,7 @@ export type ActivityItem = { id:string; type:"scan"|"access"|"update"; title:str
 export type ScanItem = { id:string; at:string; slug:string };
 export type DoctorSession = { status:"active"|"ended"; startedAt:string; expiresAt:string };
 
-const A="vital-id-activity", S="vital-id-scans", D="vital-id-devices", DS="vital-id-doctor-session";
+const A="vital-id-activity", S="vital-id-scans", DS="vital-id-doctor-session";
 const hasWindow = () => typeof window !== "undefined";
 const read = <T,>(key:string, fallback:T):T => { if(!hasWindow()) return fallback; try { const v=localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch { return fallback; } };
 const write = (key:string, value:unknown) => { if(hasWindow()) localStorage.setItem(key, JSON.stringify(value)); };
@@ -30,9 +30,7 @@ export function recordScan(slug:string) {
   write(S,[{id:crypto.randomUUID(), at:new Date(now).toISOString(), slug},...scans]);
   addActivity({type:"scan",title:"Medical ID scanned",detail:slug});
 }
-export const getDeviceStatus = (id:string):"active"|"deactivated" => read<Record<string,"active"|"deactivated">>(D,{})[id] ?? "active";
-export function setDeviceStatus(id:string,status:"active"|"deactivated") { const map=read<Record<string,"active"|"deactivated">>(D,{}); map[id]=status; write(D,map); addActivity({type:"update",title:`Device ${status}`,detail:id}); }
 export function startDoctorSession() { const started=new Date(); const expires=new Date(started.getTime()+20*60*1000); const s:DoctorSession={status:"active",startedAt:started.toISOString(),expiresAt:expires.toISOString()}; write(DS,s); addActivity({type:"access",title:"Healthcare access granted",detail:"20-minute session"}); return s; }
 export function getDoctorSession():DoctorSession|null { const s=read<DoctorSession|null>(DS,null); if(!s) return null; if(s.status!=="active") return s; if(Date.now()>new Date(s.expiresAt).getTime()){ endDoctorSession(); return null; } return s; }
 export function endDoctorSession(){ const s=read<DoctorSession|null>(DS,null); if(s){ write(DS,{...s,status:"ended"}); addActivity({type:"access",title:"Healthcare session ended",detail:"Access revoked"}); } }
-export function resetDemo(){ if(!hasWindow()) return; [A,S,D,DS].forEach(k=>localStorage.removeItem(k)); resetPatientData(); }
+export function resetDemo(){ if(!hasWindow()) return; [A,S,DS].forEach(k=>localStorage.removeItem(k)); resetPatientData(); }

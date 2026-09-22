@@ -2,20 +2,28 @@ import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
 import { signClinicianToken } from "@/lib/server/sessionToken";
 import type { PatientProfile } from "@/lib/types";
+import { rateLimit, requestIp } from "@/lib/server/rateLimit";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
+  const ip = requestIp(request);
+  const attempt = rateLimit(`doctor-access:${ip}`, 8, 10 * 60 * 1000);
+  if (!attempt.allowed) {
+    return NextResponse.json({ error: "too_many_attempts" }, { status: 429, headers: { "Retry-After": String(attempt.retryAfter) } });
+  }
+
   const supabase = getSupabaseAdmin();
   if (!supabase) return NextResponse.json({ error: "cloud_not_configured" }, { status: 503 });
 
   const body = await request.json().catch(() => ({}));
   const qrSlug = String(body?.qrSlug ?? "");
   const otp = String(body?.otp ?? "");
-  const expectedOtp = process.env.VITAL_ID_DEMO_OTP || "4827";
+  const expectedOtp = process.env.VITAL_ID_DEMO_OTP || (process.env.NODE_ENV !== "production" ? "4827" : "");
 
   if (!qrSlug) return NextResponse.json({ error: "missing_qr" }, { status: 400 });
-  if (otp !== expectedOtp) return NextResponse.json({ error: "invalid_otp" }, { status: 401 });
+  if (!expectedOtp) return NextResponse.json({ error: "otp_not_configured" }, { status: 503 });
+  if (otp.length > 12 || otp !== expectedOtp) return NextResponse.json({ error: "invalid_otp" }, { status: 401 });
 
   const { data: deviceRow, error: deviceError } = await supabase
     .from("devices")

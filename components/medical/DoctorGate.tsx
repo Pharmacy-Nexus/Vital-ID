@@ -112,7 +112,7 @@ export default function DoctorGate({ patient, scanId, cloudPreferred = false }: 
           return;
         }
         if (response.status === 401) {
-          setError(tr("Incorrect demo code. Use 4827.", "رمز التجربة غير صحيح. استخدم 4827."));
+          setError(tr("Incorrect authorization code.", "رمز الدخول غير صحيح."));
           return;
         }
         if (response.status !== 503) {
@@ -122,7 +122,7 @@ export default function DoctorGate({ patient, scanId, cloudPreferred = false }: 
       }
 
       if (otp !== "4827") {
-        setError(tr("Incorrect demo code. Use 4827.", "رمز التجربة غير صحيح. استخدم 4827."));
+        setError(tr("Incorrect authorization code.", "رمز الدخول غير صحيح."));
         return;
       }
       setSession(startDoctorSession());
@@ -139,7 +139,7 @@ export default function DoctorGate({ patient, scanId, cloudPreferred = false }: 
       <div className="w-full max-w-sm bg-white rounded-3xl border hairline p-6">
         <p className="text-[11px] uppercase tracking-[.2em] font-bold text-aubergine">{tr("Protected record", "سجل محمي")}</p>
         <h1 className="text-2xl font-bold mt-2">{tr("Request healthcare access", "طلب الوصول للسجل الطبي")}</h1>
-        <p className="text-sm text-muted mt-2 mb-5">{tr("Demo authorization code:", "رمز الدخول التجريبي:")} <b>4827</b>. {tr("Access lasts 20 minutes.", "مدة الوصول 20 دقيقة.")}</p>
+        <p className="text-sm text-muted mt-2 mb-5">{tr("Enter the temporary authorization code. Access lasts 20 minutes.", "أدخل رمز الدخول المؤقت. مدة الوصول 20 دقيقة.")}</p>
         <input value={otp} onChange={(e) => setOtp(e.target.value)} inputMode="numeric" placeholder={tr("Enter OTP", "أدخل رمز التحقق")} className="w-full min-h-[52px] rounded-2xl border-2 border-ink/15 px-4 outline-none focus:border-aubergine" />
         {error && <p className="text-sm text-coral mt-2">{error}</p>}
         <button disabled={busy} onClick={() => void submit()} className="w-full min-h-[52px] rounded-2xl bg-ink text-bone font-bold mt-4 disabled:opacity-50">{busy ? tr("Authorizing…", "جارٍ التحقق…") : tr("Authorize access", "السماح بالوصول")}</button>
