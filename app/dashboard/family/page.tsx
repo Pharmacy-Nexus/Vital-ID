@@ -7,6 +7,7 @@ import { useLang } from "@/components/ui/LangProvider";
 import { setActiveSlug, useActiveSlug, useAllPatients } from "@/lib/patientStore";
 import { useDevices } from "@/lib/deviceStore";
 import ProfilePhoto from "@/components/ui/ProfilePhoto";
+import NoPatientYet from "@/components/ui/NoPatientYet";
 
 export default function FamilyPage() {
   const { tr } = useLang();
@@ -27,7 +28,7 @@ export default function FamilyPage() {
         <Link href="/activate" className="min-h-[40px] px-3 rounded-xl bg-ink text-bone text-xs font-bold flex items-center gap-1.5 shrink-0"><Plus size={14}/>{tr("Add", "إضافة")}</Link>
       </div>
 
-      <div className="space-y-3">
+      {patients.length === 0 ? <NoPatientYet /> : <div className="space-y-3">
         {patients.map((patient) => {
           const primary = devices.find((d) => d.patientSlug === patient.slug && d.status === "active");
           return <div key={patient.slug} className={`bg-white rounded-2xl p-5 border ${patient.slug === activeSlug ? "border-aubergine/40" : "hairline"}`}>
@@ -35,7 +36,7 @@ export default function FamilyPage() {
             <div className="grid grid-cols-2 gap-2 mt-4"><button onClick={() => manage(patient.slug)} className="min-h-[42px] rounded-xl bg-ink text-bone text-xs font-bold">{tr("Manage profile", "إدارة الملف")}</button>{primary ? <Link href={`/id/${primary.qrSlug}`} className="min-h-[42px] rounded-xl border-2 border-ink text-xs font-bold flex items-center justify-center gap-1">{tr("Open QR view", "فتح عرض QR")}<ChevronRight size={14}/></Link> : <Link href="/dashboard/devices" onClick={() => setActiveSlug(patient.slug)} className="min-h-[42px] rounded-xl border-2 border-ink/20 text-xs font-bold flex items-center justify-center">{tr("Add device", "إضافة جهاز")}</Link>}</div>
           </div>;
         })}
-      </div>
+      </div>}
     </div>
   );
 }

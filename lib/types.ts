@@ -2,6 +2,7 @@ export type Freshness = "current" | "review" | "outdated";
 export type SourceType = "patient" | "document" | "provider";
 export type Visibility = "emergency" | "private";
 export type DocumentCategory = "lab" | "radiology" | "prescription" | "discharge" | "surgery" | "vaccination" | "visit" | "other";
+export type PatientSex = "male" | "female" | "unspecified";
 export type RelationshipToOwner = "self" | "child" | "caregiver" | "other";
 
 export type TimelineEvent = {
@@ -89,6 +90,7 @@ export type PatientDocument = {
 
 export type DeviceDisplaySettings = {
   basicInfo: boolean;
+  emergencySummary: boolean;
   bloodType: boolean;
   allergies: boolean;
   conditions: boolean;
@@ -114,6 +116,8 @@ export type PatientProfile = {
   firstName: string;
   lastName: string;
   age: number;
+  sex?: PatientSex;
+  emergencySummary?: string;
   dateOfBirth?: string;
   bloodType: string;
   bloodTypeSource?: SourceType;

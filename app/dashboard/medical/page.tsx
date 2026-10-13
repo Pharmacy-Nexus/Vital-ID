@@ -1,4 +1,5 @@
 "use client";
+import NoPatientYet from "@/components/ui/NoPatientYet";
 
 import { useState } from "react";
 import { Check, Pencil, Plus, UserRound } from "lucide-react";
@@ -20,10 +21,10 @@ export default function MedicalPage() {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<Editing>(null);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [profileDraft, setProfileDraft] = useState({ firstName: "", lastName: "", age: "", dateOfBirth: "", bloodType: "" });
+  const [profileDraft, setProfileDraft] = useState({ firstName: "", lastName: "", age: "", dateOfBirth: "", bloodType: "", sex: "unspecified", emergencySummary: "" });
   const [confirming, setConfirming] = useState<string | null>(null);
 
-  if (!patient) return <div className="max-w-4xl mx-auto px-5 lg:px-8 pt-8 text-muted">{tr("Loading medical profile…", "جارٍ تحميل الملف الطبي…")}</div>;
+  if (!patient) return <NoPatientYet />;
 
   const commit = (next: PatientProfile, activityLabel: string) => {
     savePatient(next);
@@ -49,6 +50,8 @@ export default function MedicalPage() {
       age: String(patient.age || ""),
       dateOfBirth: patient.dateOfBirth ?? "",
       bloodType: patient.bloodType,
+      sex: patient.sex ?? "unspecified",
+      emergencySummary: patient.emergencySummary ?? "",
     });
     setProfileOpen(true);
   };
@@ -61,6 +64,8 @@ export default function MedicalPage() {
       age: Number(profileDraft.age) || patient.age,
       dateOfBirth: profileDraft.dateOfBirth || undefined,
       bloodType: profileDraft.bloodType.trim() || patient.bloodType,
+      sex: profileDraft.sex as PatientProfile["sex"],
+      emergencySummary: profileDraft.emergencySummary.trim().slice(0, 800),
       bloodTypeSource: "patient" as const,
     };
     commit(next, "Basic profile updated");
@@ -187,6 +192,8 @@ export default function MedicalPage() {
                 ["dateOfBirth", tr("Date of birth", "تاريخ الميلاد")],
                 ["bloodType", tr("Blood type", "فصيلة الدم")],
               ].map(([key, label]) => <label key={key} className="block"><span className="text-[11px] font-bold uppercase tracking-wide text-muted">{label}</span><input value={(profileDraft as any)[key]} onChange={(e) => setProfileDraft((p) => ({ ...p, [key]: e.target.value }))} className="w-full mt-1.5 min-h-[46px] px-4 rounded-xl border-2 border-ink/15 bg-white outline-none focus:border-aubergine" /></label>)}
+              <label className="block"><span className="text-[11px] font-bold uppercase tracking-wide text-muted">{tr("Sex", "النوع")}</span><select value={profileDraft.sex} onChange={(e) => setProfileDraft(p=>({...p,sex:e.target.value}))} className="w-full mt-1.5 min-h-[46px] px-4 rounded-xl border-2 border-ink/15 bg-white"><option value="unspecified">{tr("Unspecified", "غير محدد")}</option><option value="male">{tr("Male", "ذكر")}</option><option value="female">{tr("Female", "أنثى")}</option></select></label>
+              <label className="block"><span className="text-[11px] font-bold uppercase tracking-wide text-muted">{tr("Emergency summary", "ملخص الحالة للطوارئ")}</span><textarea maxLength={800} rows={4} value={profileDraft.emergencySummary} onChange={(e)=>setProfileDraft(p=>({...p,emergencySummary:e.target.value}))} className="w-full mt-1.5 p-3 rounded-xl border-2 border-ink/15 bg-white"/><small className="text-muted">{tr("Shown only when enabled in QR device settings.", "لا يظهر إلا بعد تفعيله من إعدادات الـQR.")}</small></label>
             </div>
             <button onClick={saveProfile} className="w-full min-h-[48px] rounded-2xl bg-ink text-bone font-bold mt-6">{tr("Save changes", "حفظ التعديلات")}</button>
           </div>

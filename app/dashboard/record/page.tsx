@@ -1,4 +1,5 @@
 "use client";
+import NoPatientYet from "@/components/ui/NoPatientYet";
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
@@ -117,7 +118,7 @@ function RecordPageContent() {
     });
   }, [patient, filter, query, sortMode]);
 
-  if (!patient) return <div className="max-w-5xl mx-auto px-5 lg:px-8 pt-8 text-[#707070]">{tr("Loading record…", "جارٍ تحميل السجل…")}</div>;
+  if (!patient) return <NoPatientYet />;
 
   const choose = (file: File) => {
     if (previewUrl) URL.revokeObjectURL(previewUrl);

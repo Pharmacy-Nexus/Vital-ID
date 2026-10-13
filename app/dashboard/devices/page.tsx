@@ -75,7 +75,8 @@ function DeviceEditor({ device, onClose, onSave }: { device: LinkedDevice; onClo
   const [name, setName] = useState(device.name);
   const [display, setDisplay] = useState<DeviceDisplaySettings>({ ...device.display });
   const labels: Array<[keyof DeviceDisplaySettings, string, string]> = [
-    ["basicInfo", "Name & age", "الاسم والعمر"],
+    ["basicInfo", "Name, age & sex", "الاسم والعمر والنوع"],
+    ["emergencySummary", "Owner-written emergency summary", "ملخص الطوارئ الذي يكتبه صاحب الملف"],
     ["bloodType", "Blood type", "فصيلة الدم"],
     ["allergies", "Emergency allergies", "حساسية الطوارئ"],
     ["conditions", "Medical conditions", "الحالات المرضية"],

@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
@@ -41,22 +40,6 @@ function ArrowLink({ href, children }: { href: string; children: React.ReactNode
 
 export default function Home() {
   const { tr } = useLang();
-  const cinematicRef = useRef<HTMLIFrameElement>(null);
-
-  useEffect(() => {
-    const iframe = cinematicRef.current;
-    if (!iframe) return;
-    const sendVisibility = (visible: boolean) =>
-      iframe.contentWindow?.postMessage({ type: "vital-cinematic-visibility", visible }, window.location.origin);
-    const observer = new IntersectionObserver(
-      ([entry]) => sendVisibility(entry.isIntersecting && entry.intersectionRatio > 0.05),
-      { threshold: [0, 0.05, 0.25] }
-    );
-    observer.observe(iframe);
-    iframe.addEventListener("load", () => sendVisibility(false), { once: true });
-    return () => observer.disconnect();
-  }, []);
-
   const audiences = [
     {
       n: "01",
@@ -242,97 +225,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CINEMATIC TRANSITION */}
-      <section className="v2-film">
-        <div className="v2-film-transition" aria-hidden="true" />
-        <div className="v2-container v2-film-head">
-          <motion.div {...reveal}>
-            <SectionEyebrow>{tr("THE VITAL ID EXPERIENCE", "تجربة VITAL ID")}</SectionEyebrow>
-            <h2>{tr("FROM A TAP TO THE INFORMATION THAT MATTERS.", "من لمسة للمعلومة اللي تفرق.")}</h2>
-          </motion.div>
-          <motion.p {...reveal} transition={{ duration: 0.72, delay: 0.08, ease }}>
-            {tr(
-              "The card is the key — not the database. Your medical identity stays current while the physical ID stays with you.",
-              "الكارت هو المفتاح — مش قاعدة البيانات. هويتك الطبية تفضل محدثة والكارت يفضل معاك."
-            )}
-          </motion.p>
-        </div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 54, scale: 0.975 }}
-          whileInView={{ opacity: 1, y: 0, scale: 1 }}
-          viewport={{ once: true, amount: 0.12 }}
-          transition={{ duration: 0.92, ease }}
-          className="v2-film-frame"
-        >
-          <iframe
-            ref={cinematicRef}
-            src="/cinematic/index.html?loop=0&controls=0&autoplay=1"
-            title="VITAL ID cinematic product experience"
-            loading="lazy"
-            allow="autoplay; fullscreen"
-          />
-          <div className="v2-film-vignette" aria-hidden="true" />
-        </motion.div>
-
-        <div className="v2-container v2-film-lineup">
-          <motion.div
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, amount: 0.35 }}
-            variants={{
-              hidden: {},
-              show: { transition: { staggerChildren: 0.34, delayChildren: 0.12 } },
-            }}
-            className="v2-lineup-copy"
-          >
-            <motion.span
-              variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: { duration: 0.55, ease } } }}
-              className="v2-lineup-kicker"
-            >
-              {tr("ONE MEDICAL IDENTITY", "هوية طبية واحدة")}
-            </motion.span>
-
-            <div className="v2-lineup-story" aria-label={tr("What VITAL ID keeps ready", "إيه اللي VITAL ID بيخليه جاهز")}>
-              {[
-                tr("Emergency information.", "معلومات الطوارئ."),
-                tr("Your medical files.", "ملفاتك الطبية."),
-                tr("Temporary doctor access.", "وصول مؤقت للطبيب."),
-                tr("One identity. Always with you.", "هوية واحدة. معاك دايمًا."),
-              ].map((line, index) => (
-                <motion.p
-                  key={line}
-                  variants={{
-                    hidden: { opacity: 0, y: 24, filter: "blur(5px)" },
-                    show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.68, ease } },
-                  }}
-                  className={index === 3 ? "v2-lineup-line v2-lineup-line-final" : "v2-lineup-line"}
-                >
-                  {line}
-                </motion.p>
-              ))}
-            </div>
-
-            <motion.strong
-              variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { duration: 0.5, ease } } }}
-              className="v2-lineup-footnote"
-            >
-              {tr("Card or wearable. The same medical identity behind it.", "كارت أو سوار. ونفس الهوية الطبية وراهم.")}
-            </motion.strong>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 54, scale: 0.96 }}
-            whileInView={{ opacity: 1, x: 0, scale: 1 }}
-            viewport={{ once: true, amount: 0.28 }}
-            transition={{ duration: 0.92, delay: 0.16, ease }}
-            className="v2-lineup-image"
-          >
-            <Image src="/campaign/card-lineup.png" width={1122} height={1402} alt="Black and white VITAL ID medical cards" />
-          </motion.div>
-        </div>
-      </section>
-
       {/* PASSPORT */}
       <section id="passport" className="v2-passport">
         <div className="v2-container">
@@ -353,9 +245,6 @@ export default function Home() {
               <span className="v2-passport-label">01 / {tr("FILES", "الملفات")}</span>
               <h3>{tr("Keep your medical files together.", "خلي ملفاتك الطبية في مكان واحد.")}</h3>
               <p>{tr("Labs, radiology, prescriptions, reports, procedures and other medical documents.", "تحاليل وأشعات وروشتات وتقارير وعمليات ومستندات طبية تانية.")}</p>
-              <div className="v2-file-stack" aria-hidden="true">
-                <span>LAB / CBC</span><span>RAD / CT</span><span>RX / 2026</span>
-              </div>
             </motion.article>
 
             <motion.article {...reveal} transition={{ duration: 0.72, delay: 0.08, ease }} className="v2-passport-card">
@@ -466,7 +355,7 @@ export default function Home() {
                 "معلومات الطوارئ ممكن تكون متاحة فورًا. أما الملف الطبي الأشمل فيفضل ورا وصول متحكم فيه."
               )}
             </p>
-            <ArrowLink href="/id/demo-001">{tr("Open emergency demo", "افتح تجربة الطوارئ")}</ArrowLink>
+            <ArrowLink href="/activate">{tr("Create your emergency ID", "أنشئ هويتك للطوارئ")}</ArrowLink>
           </motion.div>
 
           <motion.div {...reveal} transition={{ duration: 0.72, delay: 0.1, ease }} className="v2-privacy-panel">

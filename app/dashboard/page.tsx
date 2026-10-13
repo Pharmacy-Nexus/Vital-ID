@@ -1,4 +1,5 @@
 "use client";
+import NoPatientYet from "@/components/ui/NoPatientYet";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
@@ -117,9 +118,7 @@ export default function DashboardHome() {
     return Math.round((checks.filter((value) => value > 0).length / checks.length) * 100);
   }, [patient]);
 
-  if (!patient) {
-    return <div className="max-w-6xl mx-auto px-5 lg:px-8 pt-8 text-muted">{tr("Loading dashboard…", "جارٍ تحميل لوحة التحكم…")}</div>;
-  }
+  if (!patient) return <NoPatientYet />;
 
   const emergencyContact = patient.emergencyContacts.find((item) => item.visibility !== "private") ?? patient.emergencyContacts[0];
   const publicAllergies = patient.allergies.filter((item) => item.visibility !== "private");

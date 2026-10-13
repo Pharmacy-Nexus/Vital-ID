@@ -1,4 +1,5 @@
 "use client";
+import NoPatientYet from "@/components/ui/NoPatientYet";
 
 import Link from "next/link";
 import { Activity, ChevronRight, ClipboardCheck, FolderOpen, QrCode, Share2, UserRound, Users } from "lucide-react";
@@ -9,7 +10,7 @@ import ProfilePhoto from "@/components/ui/ProfilePhoto";
 export default function ProfilePage() {
   const patient = useActivePatient();
   const { tr } = useLang();
-  if (!patient) return <div className="max-w-4xl mx-auto px-5 lg:px-8 pt-8 text-[#707070]">{tr("Loading…", "جارٍ التحميل…")}</div>;
+  if (!patient) return <NoPatientYet />;
 
   const items = [
     { href: "/dashboard/devices", icon: QrCode, en: "Medical IDs & QR", ar: "الهويات و QR", hintEn: "Manage cards, wristbands and what the emergency QR shows.", hintAr: "إدارة الكروت والأساور وما يظهر في QR الطوارئ." },

@@ -3,6 +3,7 @@ import type { LinkedDevice, PatientProfile } from "@/lib/types";
 // Any missing setting means OFF. Owners explicitly opt in via the device editor.
 const fallbackDisplay = {
   basicInfo: false,
+  emergencySummary: false,
   bloodType: false,
   allergies: false,
   conditions: false,
@@ -27,6 +28,8 @@ export function buildEmergencyPatient(patient: PatientProfile, device: LinkedDev
   return {
     slug: "", firstName: show.basicInfo ? patient.firstName : "", lastName: show.basicInfo ? patient.lastName : "",
     age: show.basicInfo ? patient.age : 0, dateOfBirth: undefined,
+    sex: show.basicInfo && (patient.sex === "male" || patient.sex === "female") ? patient.sex : "unspecified",
+    emergencySummary: show.emergencySummary && typeof patient.emergencySummary === "string" ? patient.emergencySummary.slice(0, 800) : "",
     bloodType: show.bloodType ? patient.bloodType : "",
     bloodTypeSource: show.bloodType ? patient.bloodTypeSource : undefined,
     photoColor: patient.photoColor || "#ddd", photoFileKey: undefined, photoFileName: undefined,

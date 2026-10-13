@@ -1,6 +1,6 @@
-// SAFE, opt-in load test. Usage: node scripts/load-test.mjs http://localhost:3000/id/demo-001 20 200
+// SAFE, opt-in load test. Usage: node scripts/load-test.mjs http://localhost:3000/api/public/id/YOUR_REAL_TEST_DEVICE_SLUG 20 200
 // For a remote staging environment set VITAL_ALLOW_REMOTE_LOAD_TEST=YES and obtain authorization.
-const url=new URL(process.argv[2]??'http://localhost:3000/api/public/id/demo-001');
+const url=new URL(process.argv[2]??'http://localhost:3000/api/public/id/YOUR_REAL_TEST_DEVICE_SLUG');
 const local=['localhost','127.0.0.1','::1'].includes(url.hostname);
 if(!local && process.env.VITAL_ALLOW_REMOTE_LOAD_TEST!=='YES'){
  console.error('Refusing to load test remote hosts without explicit VITAL_ALLOW_REMOTE_LOAD_TEST=YES');process.exit(1);

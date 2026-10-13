@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { patients as seedPatients } from "@/data/demo/patients";
 import type { PatientProfile } from "@/lib/types";
 import { upsertCloudPatient } from "@/lib/cloud/repository";
 
@@ -36,8 +35,8 @@ const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
 function seedState(): DemoPatientState {
   return {
     version: 2,
-    activeSlug: "demo-001",
-    patients: clone(seedPatients),
+    activeSlug: "",
+    patients: {},
   };
 }
 
@@ -48,6 +47,8 @@ function normalizePatient(patient: PatientProfile): PatientProfile {
     photoEmergencyVisible: patient.photoEmergencyVisible ?? false,
     photoUrl: undefined,
     relationshipToOwner: patient.relationshipToOwner ?? "self",
+    sex: patient.sex === "male" || patient.sex === "female" ? patient.sex : "unspecified",
+    emergencySummary: typeof patient.emergencySummary === "string" ? patient.emergencySummary.slice(0, 800) : "",
     conditions: patient.conditions.map((item) => ({ ...item, visibility: item.visibility ?? "emergency" })),
     medications: patient.medications.map((item) => ({ ...item, visibility: item.visibility ?? "emergency" })),
     allergies: patient.allergies.map((item) => ({ ...item, visibility: item.visibility ?? "emergency" })),
@@ -58,13 +59,15 @@ function normalizePatient(patient: PatientProfile): PatientProfile {
 
 function normalizeState(state: DemoPatientState): DemoPatientState {
   const merged: Record<string, PatientProfile> = {};
-  const all = { ...clone(seedPatients), ...(state?.patients ?? {}) };
+  const all = { ...(state?.patients ?? {}) };
   Object.entries(all).forEach(([slug, patient]) => {
+    // Old sample profiles must not continue appearing after an upgrade.
+    if (slug === "demo-001" || slug === "demo-child-001") return;
     merged[slug] = normalizePatient(patient);
   });
   return {
     version: 2,
-    activeSlug: state?.activeSlug && merged[state.activeSlug] ? state.activeSlug : "demo-001",
+    activeSlug: state?.activeSlug && merged[state.activeSlug] ? state.activeSlug : Object.keys(merged)[0] ?? "",
     patients: merged,
   };
 }
@@ -78,7 +81,13 @@ export function readPatientState(): DemoPatientState {
       stateStorage().setItem(stateKey(), JSON.stringify(seeded));
       return seeded;
     }
-    return normalizeState(JSON.parse(raw));
+    const parsed = JSON.parse(raw) as DemoPatientState;
+    const cleaned = normalizeState(parsed);
+    // Wipe only bundled example records from the browser's old local cache.
+    if (parsed?.patients?.["demo-001"] || parsed?.patients?.["demo-child-001"]) {
+      stateStorage().setItem(stateKey(), JSON.stringify(cleaned));
+    }
+    return cleaned;
   } catch {
     return normalizeState(seedState());
   }
@@ -95,9 +104,9 @@ export function getPatient(slug: string): PatientProfile | null {
   return readPatientState().patients[slug] ?? null;
 }
 
-export function getActivePatient(): PatientProfile {
+export function getActivePatient(): PatientProfile | null {
   const state = readPatientState();
-  return state.patients[state.activeSlug] ?? state.patients["demo-001"];
+  return state.patients[state.activeSlug] ?? null;
 }
 
 export function getActiveSlug() {
@@ -138,7 +147,7 @@ export function resetPatientData() {
 }
 
 export function usePatient(slug: string) {
-  const fallback = seedPatients[slug] ? normalizePatient(clone(seedPatients[slug])) : null;
+  const fallback: PatientProfile | null = null;
   const [patient, setPatient] = useState<PatientProfile | null>(fallback);
 
   useEffect(() => {
@@ -156,7 +165,7 @@ export function usePatient(slug: string) {
 }
 
 export function useActivePatient() {
-  const [slug, setSlug] = useState("demo-001");
+  const [slug, setSlug] = useState("");
   const patient = usePatient(slug);
 
   useEffect(() => {
@@ -175,14 +184,14 @@ export function useActivePatient() {
 
 export function hydratePatientsFromCloud(patients: PatientProfile[], activeSlug?: string) {
   const current = readPatientState();
-  const merged = { ...clone(seedPatients) } as Record<string, PatientProfile>;
+  const merged = {} as Record<string, PatientProfile>;
   patients.forEach((patient) => { merged[patient.slug] = normalizePatient(patient); });
-  const nextActive = activeSlug && merged[activeSlug] ? activeSlug : (patients.length ? patients[0].slug : "demo-001");
+  const nextActive = activeSlug && merged[activeSlug] ? activeSlug : (merged[current.activeSlug] ? current.activeSlug : (Object.keys(merged)[0] ?? ""));
   writePatientState({ ...current, activeSlug: nextActive, patients: merged });
 }
 
 export function useAllPatients() {
-  const [patients, setPatients] = useState<PatientProfile[]>(() => Object.values(seedPatients).map((p) => normalizePatient(clone(p))));
+  const [patients, setPatients] = useState<PatientProfile[]>([]);
   useEffect(() => {
     const refresh = () => setPatients(Object.values(readPatientState().patients));
     refresh();
@@ -197,7 +206,7 @@ export function useAllPatients() {
 }
 
 export function useActiveSlug() {
-  const [slug, setSlug] = useState("demo-001");
+  const [slug, setSlug] = useState("");
   useEffect(() => {
     const refresh = () => setSlug(getActiveSlug());
     refresh();

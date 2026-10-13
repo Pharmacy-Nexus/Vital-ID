@@ -4,7 +4,6 @@ import { use, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import EmergencyView from "@/components/emergency/EmergencyView";
 import DoctorGate from "@/components/medical/DoctorGate";
-import DemoTag from "@/components/ui/DemoTag";
 import { getDeviceByQrSlug, markDeviceScanned } from "@/lib/deviceStore";
 import { usePatient } from "@/lib/patientStore";
 import { useLang } from "@/components/ui/LangProvider";
@@ -27,7 +26,6 @@ export default function MedicalIdPage({ params }: { params: Promise<{ slug: stri
     const found = getDeviceByQrSlug(slug);
     setLocalDevice(found);
     if (found?.status === "active") markDeviceScanned(slug);
-    if (slug.startsWith("demo-") && !found) setResolved(true);
 
     const loadCloud = async (logScan = false) => {
       try {
@@ -75,15 +73,15 @@ export default function MedicalIdPage({ params }: { params: Promise<{ slug: stri
     };
   }, [slug]);
 
-  const localPatientSlug = useMemo(() => localDevice?.patientSlug ?? (slug.startsWith("demo-") ? slug : "__invalid__"), [localDevice, slug]);
+  const localPatientSlug = useMemo(() => localDevice?.patientSlug ?? "__invalid__", [localDevice]);
   const localPatient = usePatient(localPatientSlug);
-  const canUseLocal = !isCloudConfigured() || slug.startsWith("demo-") || slug.includes("-demo-");
+  const canUseLocal = !isCloudConfigured();
   // In a configured deployment, network errors must never expose local private
   // owner state as a public QR response.
   const patient = remotePatient ?? (canUseLocal ? localPatient : null);
   const device = remoteDevice ?? (canUseLocal ? localDevice : null);
   const isRemote = Boolean(remotePatient && remoteDevice);
-  const isActive = remoteDisabled ? false : device ? device.status === "active" : slug.startsWith("demo-");
+  const isActive = remoteDisabled ? false : device?.status === "active";
 
   if (!resolved) {
     return <div className="min-h-screen bg-bone flex items-center justify-center text-muted">{tr("Loading Medical ID…", "جارٍ تحميل الهوية الطبية…")}</div>;
@@ -95,8 +93,7 @@ export default function MedicalIdPage({ params }: { params: Promise<{ slug: stri
         <div className="w-16 h-16 rounded-2xl bg-coral/10 flex items-center justify-center mb-6"><span className="text-coral text-2xl font-bold">!</span></div>
         <h1 className="text-2xl font-bold mb-2">{!patient ? tr("Invalid Medical ID", "هوية طبية غير صالحة") : tr("This Medical ID has been disabled.", "تم تعطيل هذه الهوية الطبية.")}</h1>
         <p className="text-muted mb-8">{!patient ? tr("The link you scanned doesn't match any active profile.", "الرابط الذي تم مسحه لا يطابق ملفًا طبيًا نشطًا.") : tr("The account owner has deactivated this device. No information is available.", "قام صاحب الحساب بتعطيل هذا الجهاز، لذلك لا توجد بيانات متاحة.")}</p>
-        <button onClick={() => router.push("/")} className="min-h-[48px] px-8 rounded-2xl bg-ink text-bone font-bold text-sm">{tr("Back to demo", "العودة للتجربة")}</button>
-        <DemoTag />
+        <button onClick={() => router.push("/")} className="min-h-[48px] px-8 rounded-2xl bg-ink text-bone font-bold text-sm">{tr("Back to home", "العودة للرئيسية")}</button>
       </div>
     );
   }

@@ -1,11 +1,10 @@
 "use client";
 
-import { getActiveSlug, resetPatientData } from "@/lib/patientStore";
+import { getActiveSlug } from "@/lib/patientStore";
 import { insertCloudActivity } from "@/lib/cloud/repository";
 
 export type ActivityItem = { id:string; type:"scan"|"access"|"update"; title:string; detail:string; time:string; date:string };
 export type ScanItem = { id:string; at:string; slug:string };
-export type DoctorSession = { status:"active"|"ended"; startedAt:string; expiresAt:string };
 
 const A="vital-id-activity", S="vital-id-scans", DS="vital-id-doctor-session";
 const hasWindow = () => typeof window !== "undefined";
@@ -18,9 +17,21 @@ export function clearPrivateActivity() {
   if (!hasWindow()) return;
   [A,S,DS].forEach(k=>localStorage.removeItem(k));
 }
-export const getActivity = () => read<ActivityItem[]>(A, []);
+export const getActivity = () => {
+  const rows = read<ActivityItem[]>(A, []);
+  if (!Array.isArray(rows)) return [];
+  const cleaned = rows.filter(row => row && !/demo-(?:001|child-001)/.test(row.detail ?? "") && row.title !== "Healthcare access granted");
+  if (cleaned.length !== rows.length) write(A, cleaned);
+  return cleaned;
+};
 export const replaceActivity = (items: ActivityItem[]) => write(A, items);
-export const getScans = () => read<ScanItem[]>(S, []);
+export const getScans = () => {
+  const rows = read<ScanItem[]>(S, []);
+  if (!Array.isArray(rows)) return [];
+  const cleaned = rows.filter(row => row && !String(row.slug).includes("-demo-") && row.slug !== "demo-001");
+  if (cleaned.length !== rows.length) write(S, cleaned);
+  return cleaned;
+};
 export function addActivity(input: Omit<ActivityItem,"id"|"time"|"date"> & Partial<Pick<ActivityItem,"id"|"time"|"date">>) {
   const now = new Date();
   const item: ActivityItem = { id:input.id ?? crypto.randomUUID(), type:input.type, title:input.title, detail:input.detail, time:input.time ?? formatTime(now), date:input.date ?? formatDate(now) };
@@ -34,7 +45,3 @@ export function recordScan(slug:string) {
   write(S,[{id:crypto.randomUUID(), at:new Date(now).toISOString(), slug},...scans]);
   addActivity({type:"scan",title:"Medical ID scanned",detail:slug});
 }
-export function startDoctorSession() { const started=new Date(); const expires=new Date(started.getTime()+20*60*1000); const s:DoctorSession={status:"active",startedAt:started.toISOString(),expiresAt:expires.toISOString()}; write(DS,s); addActivity({type:"access",title:"Healthcare access granted",detail:"20-minute session"}); return s; }
-export function getDoctorSession():DoctorSession|null { const s=read<DoctorSession|null>(DS,null); if(!s) return null; if(s.status!=="active") return s; if(Date.now()>new Date(s.expiresAt).getTime()){ endDoctorSession(); return null; } return s; }
-export function endDoctorSession(){ const s=read<DoctorSession|null>(DS,null); if(s){ write(DS,{...s,status:"ended"}); addActivity({type:"access",title:"Healthcare session ended",detail:"Access revoked"}); } }
-export function resetDemo(){ if(!hasWindow()) return; [A,S,DS].forEach(k=>localStorage.removeItem(k)); resetPatientData(); }

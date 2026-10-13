@@ -1,4 +1,5 @@
 "use client";
+import NoPatientYet from "@/components/ui/NoPatientYet";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
@@ -43,7 +44,7 @@ export default function ShareRecordPage() {
     return `${window.location.origin}/share/${current.token}`;
   }, [current]);
 
-  if (!patient) return <div className="max-w-4xl mx-auto px-5 lg:px-8 pt-8 text-[#707070]">{tr("Loading…", "جارٍ التحميل…")}</div>;
+  if (!patient) return <NoPatientYet />;
 
   const create = async () => {
     setBusy(true); setMessage("");

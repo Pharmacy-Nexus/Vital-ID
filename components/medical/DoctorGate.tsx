@@ -2,10 +2,8 @@
 
 import { useEffect, useState } from "react";
 import type { PatientProfile } from "@/lib/types";
-import { getDoctorSession, startDoctorSession, endDoctorSession } from "@/lib/store";
 import DoctorRecord from "./DoctorRecord";
 import { LangToggle, useLang } from "@/components/ui/LangProvider";
-import { isCloudConfigured } from "@/lib/cloud/supabaseBrowser";
 
 type RemoteSession = {
   token: string;
@@ -15,7 +13,7 @@ type RemoteSession = {
 
 export default function DoctorGate({ patient, scanId, cloudPreferred = false }: { patient: PatientProfile; scanId?: string; cloudPreferred?: boolean }) {
   const { tr } = useLang();
-  const [session, setSession] = useState<ReturnType<typeof getDoctorSession>>(null);
+  void patient;
   const [remoteSession, setRemoteSession] = useState<RemoteSession | null>(null);
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
@@ -23,18 +21,12 @@ export default function DoctorGate({ patient, scanId, cloudPreferred = false }: 
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    // Do not persist complete patient records or bearer tokens in sessionStorage.
-    if (!cloudPreferred && !isCloudConfigured() && scanId?.includes("demo")) setSession(getDoctorSession());
-  }, [cloudPreferred, scanId]);
-
-  useEffect(() => {
-    const expiresAt = remoteSession?.expiresAt ?? (session?.status === "active" ? new Date(session.expiresAt).getTime() : 0);
-    if (!expiresAt) return;
-    const tick = () => setLeft(Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000)));
+    if (!remoteSession) return;
+    const tick = () => setLeft(Math.max(0, Math.ceil((remoteSession.expiresAt - Date.now()) / 1000)));
     tick();
-    const i = setInterval(tick, 1000);
-    return () => clearInterval(i);
-  }, [remoteSession, session]);
+    const interval = window.setInterval(tick, 1000);
+    return () => window.clearInterval(interval);
+  }, [remoteSession]);
 
   useEffect(() => {
     if (!remoteSession || !scanId) return;
@@ -57,9 +49,6 @@ export default function DoctorGate({ patient, scanId, cloudPreferred = false }: 
       }
       return;
     }
-    endDoctorSession();
-    setSession(null);
-    setLeft(0);
   };
 
   if (remoteSession && left > 0) {
@@ -71,18 +60,6 @@ export default function DoctorGate({ patient, scanId, cloudPreferred = false }: 
           {error && <span className="block text-xs text-red-700">{error}</span>}
         </div>
         <DoctorRecord patient={remoteSession.patient} doctorAccessToken={remoteSession.token} />
-      </div>
-    );
-  }
-
-  if (session?.status === "active" && left > 0) {
-    return (
-      <div>
-        <div className="sticky top-0 z-50 bg-lime px-4 py-2 text-center text-xs font-bold">
-          {tr("Temporary clinician access", "وصول مؤقت لمقدم الرعاية")} · {Math.floor(left / 60)}:{String(left % 60).padStart(2, "0")}
-          <button className="ms-3 underline" onClick={() => void end()}>{tr("End session", "إنهاء الجلسة")}</button>
-        </div>
-        <DoctorRecord patient={patient} />
       </div>
     );
   }
@@ -115,12 +92,7 @@ export default function DoctorGate({ patient, scanId, cloudPreferred = false }: 
         return;
       }
 
-      // Demo-only offline preview. This is never a production authentication path.
-      if (isCloudConfigured() || !scanId?.includes("demo") || otp !== "4827") {
-        setError(tr("Incorrect authorization code.", "رمز الدخول غير صحيح."));
-        return;
-      }
-      setSession(startDoctorSession());
+      setError(tr("Clinician access requires an active cloud QR and an owner-approved full-record sharing link.", "دخول الطبيب يحتاج QR سحابي نشط ورابط مشاركة كامل وافق عليه صاحب الملف."));
     } catch {
       setError(tr("Could not start the healthcare session.", "تعذر بدء الجلسة الطبية."));
     } finally {

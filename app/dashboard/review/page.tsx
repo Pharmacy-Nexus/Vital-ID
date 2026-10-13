@@ -1,4 +1,5 @@
 "use client";
+import NoPatientYet from "@/components/ui/NoPatientYet";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -88,7 +89,7 @@ export default function ClinicianReviewPage() {
     }
   };
 
-  if (!patient) return <div className="max-w-5xl mx-auto px-5 py-10 text-muted">{tr("Loading…", "جارٍ التحميل…")}</div>;
+  if (!patient) return <NoPatientYet />;
 
   return (
     <div className="max-w-5xl mx-auto px-5 lg:px-8 py-8 lg:py-10">

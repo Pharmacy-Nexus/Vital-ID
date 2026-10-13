@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { devices as seedDevices, defaultDisplaySettings } from "@/data/demo/devices";
+import { defaultDisplaySettings } from "@/lib/defaultDeviceDisplay";
 import type { LinkedDevice } from "@/lib/types";
 import { addActivity } from "@/lib/store";
 import { upsertCloudDevice } from "@/lib/cloud/repository";
@@ -17,14 +17,12 @@ export function switchDeviceIdentity(userId: string | null) {
   if (old === userId) return false;
   if (old) sessionStorage.removeItem(`vital-id-private-devices:${old}`);
   localStorage.removeItem(KEY);
-  localStorage.removeItem(LEGACY_STATUS_KEY);
   sessionStorage.removeItem(IDENTITY);
   if (userId) sessionStorage.setItem(IDENTITY, userId);
   window.dispatchEvent(new CustomEvent(EVENT));
   return true;
 }
 const EVENT = "vital-id-device-state-changed";
-const LEGACY_STATUS_KEY = "vital-id-devices";
 const hasWindow = () => typeof window !== "undefined";
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
 
@@ -35,14 +33,7 @@ function normalize(device: LinkedDevice): LinkedDevice {
   };
 }
 
-function seeded(): LinkedDevice[] {
-  if (!hasWindow()) return clone(seedDevices).map(normalize);
-  let legacy: Record<string, "active" | "deactivated"> = {};
-  try {
-    legacy = JSON.parse(localStorage.getItem(LEGACY_STATUS_KEY) || "{}");
-  } catch {}
-  return clone(seedDevices).map((device) => normalize({ ...device, status: legacy[device.id] ?? device.status }));
-}
+function seeded(): LinkedDevice[] { return []; }
 
 export function readDevices(): LinkedDevice[] {
   if (!hasWindow()) return seeded();
@@ -54,7 +45,9 @@ export function readDevices(): LinkedDevice[] {
       return initial;
     }
     const parsed = JSON.parse(raw) as LinkedDevice[];
-    return parsed.map(normalize);
+    const cleaned = Array.isArray(parsed) ? parsed.filter((d) => d && typeof d.qrSlug === "string" && !d.qrSlug.includes("-demo-")).map(normalize) : [];
+    if (Array.isArray(parsed) && cleaned.length !== parsed.length) stateStorage().setItem(stateKey(), JSON.stringify(cleaned));
+    return cleaned;
   } catch {
     return seeded();
   }
@@ -142,7 +135,7 @@ export function resetDevices() {
 }
 
 export function useDevices() {
-  const [devices, setDevices] = useState<LinkedDevice[]>(clone(seedDevices).map(normalize));
+  const [devices, setDevices] = useState<LinkedDevice[]>([]);
   useEffect(() => {
     const refresh = () => setDevices(readDevices());
     refresh();
@@ -157,5 +150,5 @@ export function useDevices() {
 }
 
 export function hydrateDevicesFromCloud(devices: LinkedDevice[]) {
-  writeDevices(devices.map(normalize));
+  writeDevices(devices.filter(d => !d.qrSlug.includes("-demo-")).map(normalize));
 }
