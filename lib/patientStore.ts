@@ -6,6 +6,22 @@ import type { PatientProfile } from "@/lib/types";
 import { upsertCloudPatient } from "@/lib/cloud/repository";
 
 const KEY = "vital-id-demo-state";
+const IDENTITY = "vital-id-current-cloud-user";
+const currentIdentity = () => typeof window !== "undefined" ? sessionStorage.getItem(IDENTITY) : null;
+const stateKey = () => currentIdentity() ? `vital-id-private-patient:${currentIdentity()}` : KEY;
+const stateStorage = () => currentIdentity() ? sessionStorage : localStorage;
+export function switchPatientIdentity(userId: string | null) {
+  if (typeof window === "undefined") return false;
+  const old = currentIdentity();
+  if (old === userId) return false;
+  if (old) sessionStorage.removeItem(`vital-id-private-patient:${old}`);
+  // Legacy origin-wide caches might contain data from other users.
+  localStorage.removeItem(KEY);
+  sessionStorage.removeItem("vital-id-current-cloud-user");
+  if (userId) sessionStorage.setItem(IDENTITY, userId);
+  window.dispatchEvent(new CustomEvent(EVENT));
+  return true;
+}
 const EVENT = "vital-id-patient-state-changed";
 
 export type DemoPatientState = {
@@ -56,10 +72,10 @@ function normalizeState(state: DemoPatientState): DemoPatientState {
 export function readPatientState(): DemoPatientState {
   if (!hasWindow()) return normalizeState(seedState());
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = stateStorage().getItem(stateKey());
     if (!raw) {
       const seeded = normalizeState(seedState());
-      localStorage.setItem(KEY, JSON.stringify(seeded));
+      stateStorage().setItem(stateKey(), JSON.stringify(seeded));
       return seeded;
     }
     return normalizeState(JSON.parse(raw));
@@ -71,7 +87,7 @@ export function readPatientState(): DemoPatientState {
 export function writePatientState(state: DemoPatientState) {
   if (!hasWindow()) return;
   const normalized = normalizeState(state);
-  localStorage.setItem(KEY, JSON.stringify(normalized));
+  stateStorage().setItem(stateKey(), JSON.stringify(normalized));
   window.dispatchEvent(new CustomEvent(EVENT));
 }
 
@@ -115,9 +131,9 @@ export function updatePatient(slug: string, updater: (patient: PatientProfile) =
 
 export function resetPatientData() {
   if (!hasWindow()) return;
-  localStorage.removeItem(KEY);
+  stateStorage().removeItem(stateKey());
   const seeded = normalizeState(seedState());
-  localStorage.setItem(KEY, JSON.stringify(seeded));
+  stateStorage().setItem(stateKey(), JSON.stringify(seeded));
   window.dispatchEvent(new CustomEvent(EVENT));
 }
 
@@ -158,11 +174,10 @@ export function useActivePatient() {
 }
 
 export function hydratePatientsFromCloud(patients: PatientProfile[], activeSlug?: string) {
-  if (!patients.length) return;
   const current = readPatientState();
-  const merged = { ...current.patients };
+  const merged = { ...clone(seedPatients) } as Record<string, PatientProfile>;
   patients.forEach((patient) => { merged[patient.slug] = normalizePatient(patient); });
-  const nextActive = activeSlug && merged[activeSlug] ? activeSlug : (merged[current.activeSlug] ? current.activeSlug : patients[0].slug);
+  const nextActive = activeSlug && merged[activeSlug] ? activeSlug : (patients.length ? patients[0].slug : "demo-001");
   writePatientState({ ...current, activeSlug: nextActive, patients: merged });
 }
 

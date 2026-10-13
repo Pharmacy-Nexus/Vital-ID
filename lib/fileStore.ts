@@ -1,6 +1,6 @@
 "use client";
 
-import { getSupabaseBrowser } from "@/lib/cloud/supabaseBrowser";
+import { getSupabaseBrowser, isCloudConfigured } from "@/lib/cloud/supabaseBrowser";
 import { getCloudUser } from "@/lib/cloud/repository";
 
 const DB_NAME = "vital-id-files";
@@ -44,6 +44,8 @@ async function saveIndexedDb(file: File, key: string) {
 export async function saveLocalFile(file: File, key = crypto.randomUUID(), patientSlug = "patient") {
   const supabase = getSupabaseBrowser();
   const user = await getCloudUser();
+  if (file.size > 12 * 1024 * 1024 || !["application/pdf", "image/jpeg", "image/png", "image/webp"].includes(file.type))
+    throw new Error("Unsupported or oversized file (12 MB maximum)");
   if (supabase && user) {
     const path = `${user.id}/${patientSlug}/${key}/${safeName(file.name)}`;
     const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
@@ -51,7 +53,9 @@ export async function saveLocalFile(file: File, key = crypto.randomUUID(), patie
       contentType: file.type || "application/octet-stream",
     });
     if (!error) return `${CLOUD_PREFIX}${path}`;
+    throw new Error("Cloud upload failed. File was NOT synced: " + (error?.message ?? "unknown"));
   }
+  if (isCloudConfigured()) throw new Error("Sign in before uploading medical files");
   return saveIndexedDb(file, key);
 }
 
@@ -61,6 +65,7 @@ export async function getLocalFile(key: string): Promise<StoredFile | null> {
     const user = await getCloudUser();
     if (!supabase || !user) return null;
     const path = key.slice(CLOUD_PREFIX.length);
+    if (!path.startsWith(`${user.id}/`)) return null;
     const { data, error } = await supabase.storage.from(BUCKET).download(path);
     if (error || !data) return null;
     return { key, blob: data, name: path.split("/").pop() || "file", type: data.type || "application/octet-stream", size: data.size, savedAt: new Date().toISOString() };
@@ -78,7 +83,10 @@ export async function getLocalFile(key: string): Promise<StoredFile | null> {
 }
 
 export async function getDoctorDocumentUrl(documentId: string, token: string) {
-  const response = await fetch(`/api/doctor/document?documentId=${encodeURIComponent(documentId)}&token=${encodeURIComponent(token)}`, { cache: "no-store" });
+  const response = await fetch("/api/doctor/document", {
+    method: "POST", cache: "no-store", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ documentId, token }),
+  });
   if (!response.ok) return null;
   const data = await response.json();
   return typeof data?.url === "string" ? data.url : null;
@@ -90,6 +98,7 @@ export async function deleteLocalFile(key: string) {
     const user = await getCloudUser();
     if (!supabase || !user) throw new Error("Sign in to delete this cloud file");
     const path = key.slice(CLOUD_PREFIX.length);
+    if (!path.startsWith(`${user.id}/`)) throw new Error("Not your file");
     const { error } = await supabase.storage.from(BUCKET).remove([path]);
     if (error) throw error;
     return;

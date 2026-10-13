@@ -5,14 +5,13 @@ import type { PatientProfile } from "@/lib/types";
 import { getDoctorSession, startDoctorSession, endDoctorSession } from "@/lib/store";
 import DoctorRecord from "./DoctorRecord";
 import { LangToggle, useLang } from "@/components/ui/LangProvider";
+import { isCloudConfigured } from "@/lib/cloud/supabaseBrowser";
 
 type RemoteSession = {
   token: string;
   expiresAt: number;
   patient: PatientProfile;
 };
-
-const storageKey = (scanId: string) => `vital-id-cloud-doctor-session:${scanId}`;
 
 export default function DoctorGate({ patient, scanId, cloudPreferred = false }: { patient: PatientProfile; scanId?: string; cloudPreferred?: boolean }) {
   const { tr } = useLang();
@@ -24,18 +23,8 @@ export default function DoctorGate({ patient, scanId, cloudPreferred = false }: 
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (cloudPreferred && scanId) {
-      try {
-        const raw = sessionStorage.getItem(storageKey(scanId));
-        if (raw) {
-          const saved = JSON.parse(raw) as RemoteSession;
-          if (saved.expiresAt > Date.now()) setRemoteSession(saved);
-          else sessionStorage.removeItem(storageKey(scanId));
-        }
-      } catch {}
-      return;
-    }
-    setSession(getDoctorSession());
+    // Do not persist complete patient records or bearer tokens in sessionStorage.
+    if (!cloudPreferred && !isCloudConfigured() && scanId?.includes("demo")) setSession(getDoctorSession());
   }, [cloudPreferred, scanId]);
 
   useEffect(() => {
@@ -50,15 +39,22 @@ export default function DoctorGate({ patient, scanId, cloudPreferred = false }: 
   useEffect(() => {
     if (!remoteSession || !scanId) return;
     if (Date.now() < remoteSession.expiresAt) return;
-    sessionStorage.removeItem(storageKey(scanId));
     setRemoteSession(null);
   }, [left, remoteSession, scanId]);
 
-  const end = () => {
+  const end = async () => {
     if (remoteSession && scanId) {
-      sessionStorage.removeItem(storageKey(scanId));
-      setRemoteSession(null);
-      setLeft(0);
+      try {
+        const response = await fetch("/api/doctor/session/revoke", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: remoteSession.token }), keepalive: true,
+        });
+        if (!response.ok) throw new Error("failed");
+        setRemoteSession(null);
+        setLeft(0);
+      } catch {
+        setError(tr("Could not revoke the session. Ask the owner to revoke the sharing link.", "تعذر إلغاء الجلسة. اطلب من المالك إلغاء رابط المشاركة."));
+      }
       return;
     }
     endDoctorSession();
@@ -71,7 +67,8 @@ export default function DoctorGate({ patient, scanId, cloudPreferred = false }: 
       <div>
         <div className="sticky top-0 z-50 bg-lime px-4 py-2 text-center text-xs font-bold">
           {tr("Temporary clinician access", "وصول مؤقت لمقدم الرعاية")} · {Math.floor(left / 60)}:{String(left % 60).padStart(2, "0")}
-          <button className="ms-3 underline" onClick={end}>{tr("End session", "إنهاء الجلسة")}</button>
+          <button className="ms-3 underline" onClick={() => void end()}>{tr("End session", "إنهاء الجلسة")}</button>
+          {error && <span className="block text-xs text-red-700">{error}</span>}
         </div>
         <DoctorRecord patient={remoteSession.patient} doctorAccessToken={remoteSession.token} />
       </div>
@@ -83,7 +80,7 @@ export default function DoctorGate({ patient, scanId, cloudPreferred = false }: 
       <div>
         <div className="sticky top-0 z-50 bg-lime px-4 py-2 text-center text-xs font-bold">
           {tr("Temporary clinician access", "وصول مؤقت لمقدم الرعاية")} · {Math.floor(left / 60)}:{String(left % 60).padStart(2, "0")}
-          <button className="ms-3 underline" onClick={end}>{tr("End session", "إنهاء الجلسة")}</button>
+          <button className="ms-3 underline" onClick={() => void end()}>{tr("End session", "إنهاء الجلسة")}</button>
         </div>
         <DoctorRecord patient={patient} />
       </div>
@@ -107,7 +104,6 @@ export default function DoctorGate({ patient, scanId, cloudPreferred = false }: 
             expiresAt: Number(payload.expiresAt),
             patient: payload.patient as PatientProfile,
           };
-          sessionStorage.setItem(storageKey(scanId), JSON.stringify(next));
           setRemoteSession(next);
           return;
         }
@@ -115,13 +111,12 @@ export default function DoctorGate({ patient, scanId, cloudPreferred = false }: 
           setError(tr("Incorrect authorization code.", "رمز الدخول غير صحيح."));
           return;
         }
-        if (response.status !== 503) {
-          setError(tr("Cloud access could not be authorized.", "تعذر السماح بالوصول إلى السجل السحابي."));
-          return;
-        }
+        setError(tr("Access denied. Ask the record owner to create a full-record temporary share in Dashboard → Share.", "تم رفض الوصول. اطلب من صاحب السجل إنشاء مشاركة مؤقتة للسجل الكامل من لوحة التحكم ← مشاركة."));
+        return;
       }
 
-      if (otp !== "4827") {
+      // Demo-only offline preview. This is never a production authentication path.
+      if (isCloudConfigured() || !scanId?.includes("demo") || otp !== "4827") {
         setError(tr("Incorrect authorization code.", "رمز الدخول غير صحيح."));
         return;
       }
@@ -139,8 +134,8 @@ export default function DoctorGate({ patient, scanId, cloudPreferred = false }: 
       <div className="w-full max-w-sm bg-white rounded-3xl border hairline p-6">
         <p className="text-[11px] uppercase tracking-[.2em] font-bold text-aubergine">{tr("Protected record", "سجل محمي")}</p>
         <h1 className="text-2xl font-bold mt-2">{tr("Request healthcare access", "طلب الوصول للسجل الطبي")}</h1>
-        <p className="text-sm text-muted mt-2 mb-5">{tr("Enter the temporary authorization code. Access lasts 20 minutes.", "أدخل رمز الدخول المؤقت. مدة الوصول 20 دقيقة.")}</p>
-        <input value={otp} onChange={(e) => setOtp(e.target.value)} inputMode="numeric" placeholder={tr("Enter OTP", "أدخل رمز التحقق")} className="w-full min-h-[52px] rounded-2xl border-2 border-ink/15 px-4 outline-none focus:border-aubergine" />
+        <p className="text-sm text-muted mt-2 mb-5">{tr("Ask the patient to create a FULL-record temporary share. Paste its temporary link or 48-character approval token here. Access lasts up to 20 minutes.", "اطلب من صاحب السجل إنشاء مشاركة مؤقتة للسجل الكامل. الصق الرابط المؤقت أو رمز الموافقة المكوّن من 48 حرفًا. مدة الجلسة بحد أقصى 20 دقيقة.")}</p>
+        <input value={otp} onChange={(e) => setOtp(e.target.value)} autoComplete="off" placeholder={tr("Paste full-share link or token", "الصق رابط مشاركة السجل الكامل أو الرمز")} className="w-full min-h-[52px] rounded-2xl border-2 border-ink/15 px-4 outline-none focus:border-aubergine" />
         {error && <p className="text-sm text-coral mt-2">{error}</p>}
         <button disabled={busy} onClick={() => void submit()} className="w-full min-h-[52px] rounded-2xl bg-ink text-bone font-bold mt-4 disabled:opacity-50">{busy ? tr("Authorizing…", "جارٍ التحقق…") : tr("Authorize access", "السماح بالوصول")}</button>
       </div>

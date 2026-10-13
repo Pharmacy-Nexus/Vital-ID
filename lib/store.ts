@@ -14,6 +14,10 @@ const write = (key:string, value:unknown) => { if(hasWindow()) localStorage.setI
 
 export const formatTime = (v:string|number|Date) => new Date(v).toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
 export const formatDate = (v:string|number|Date) => new Date(v).toLocaleDateString([], {day:"2-digit", month:"short", year:"numeric"});
+export function clearPrivateActivity() {
+  if (!hasWindow()) return;
+  [A,S,DS].forEach(k=>localStorage.removeItem(k));
+}
 export const getActivity = () => read<ActivityItem[]>(A, []);
 export const replaceActivity = (items: ActivityItem[]) => write(A, items);
 export const getScans = () => read<ScanItem[]>(S, []);

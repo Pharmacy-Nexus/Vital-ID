@@ -25,8 +25,8 @@ export async function loadCloudState() {
   if (!supabase || !user) return { user: null, patients: [] as PatientProfile[], devices: [] as LinkedDevice[], activity: [] as CloudActivity[] };
 
   const [patientsResult, devicesResult, activityResult] = await Promise.all([
-    supabase.from("patients").select("data").eq("owner_id", user.id).order("updated_at", { ascending: false }),
-    supabase.from("devices").select("data").eq("owner_id", user.id).order("updated_at", { ascending: false }),
+    supabase.from("patients").select("data").eq("owner_id", user.id).order("updated_at", { ascending: false }).limit(100),
+    supabase.from("devices").select("data").eq("owner_id", user.id).order("updated_at", { ascending: false }).limit(250),
     supabase.from("activity_logs").select("id,type,title,detail,created_at").eq("owner_id", user.id).order("created_at", { ascending: false }).limit(100),
   ]);
 
@@ -40,6 +40,18 @@ export async function loadCloudState() {
     devices: (devicesResult.data ?? []).map((row: any) => row.data as LinkedDevice),
     activity: (activityResult.data ?? []) as CloudActivity[],
   };
+}
+
+
+export async function loadCloudActivity() {
+  const supabase = getSupabaseBrowser();
+  const user = await getCloudUser();
+  if (!supabase || !user) return [] as CloudActivity[];
+  const { data, error } = await supabase.from("activity_logs")
+    .select("id,type,title,detail,created_at").eq("owner_id", user.id)
+    .order("created_at", { ascending: false }).limit(100);
+  if (error) throw error;
+  return (data ?? []) as CloudActivity[];
 }
 
 export async function upsertCloudPatient(patient: PatientProfile) {
@@ -113,16 +125,10 @@ export async function insertCloudActivity(type: "scan" | "access" | "update", ti
   if (!supabase || !user) return false;
   let patientId: string | null = null;
   if (patientSlug) patientId = await getCloudPatientId(patientSlug);
-  const { error } = await supabase.from("activity_logs").insert({
-    owner_id: user.id,
-    patient_id: patientId,
-    device_id: null,
-    type,
-    title,
-    detail,
-  });
-  if (error) throw error;
-  return true;
+  // Audit rows are server-written only. Local UI activity is displayed without
+  // forging trusted database audit entries.
+  void type; void title; void detail; void patientId;
+  return false;
 }
 
 
@@ -176,37 +182,22 @@ export async function setClinicalSuggestionStatus(id: string, status: "accepted"
 }
 
 
-function randomShareToken() {
-  const bytes = new Uint8Array(24);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes, (value) => value.toString(16).padStart(2, "0")).join("");
-}
-
 export async function createTemporaryShare(patientSlug: string, scope: ShareScope, durationMinutes: number) {
   if (!isCloudConfigured()) throw new Error("cloud_not_configured");
   const supabase = getSupabaseBrowser();
-  const user = await getCloudUser();
-  if (!supabase || !user) throw new Error("sign_in_required");
-  const patientId = await getCloudPatientId(patientSlug);
-  if (!patientId) throw new Error("patient_not_synced");
-  const token = randomShareToken();
-  const expiresAt = new Date(Date.now() + Math.max(5, durationMinutes) * 60_000).toISOString();
-  const { data, error } = await supabase.from("share_links").insert({
-    owner_id: user.id,
-    patient_id: patientId,
-    token,
-    scope,
-    expires_at: expiresAt,
-  }).select("id,token,scope,expires_at,revoked_at,created_at").single();
-  if (error) throw error;
-  await insertCloudActivity("access", "Temporary record link created", `${scope} · expires ${expiresAt}`, patientSlug).catch(() => {});
+  if (!supabase) throw new Error("cloud_not_configured");
+  const { data: session } = await supabase.auth.getSession();
+  if (!session.session?.access_token) throw new Error("sign_in_required");
+  const response = await fetch("/api/owner/shares", {
+    method: "POST", cache: "no-store",
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.session.access_token}` },
+    body: JSON.stringify({ patientSlug, scope, durationMinutes }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data?.error || "share_failed");
   return {
-    id: String(data.id),
-    token: String(data.token),
-    patientSlug,
-    scope: data.scope as ShareScope,
-    expiresAt: String(data.expires_at),
-    revokedAt: data.revoked_at ? String(data.revoked_at) : null,
+    id: String(data.id), token: String(data.token), patientSlug, scope: data.scope as ShareScope,
+    expiresAt: String(data.expires_at), revokedAt: data.revoked_at ? String(data.revoked_at) : null,
     createdAt: String(data.created_at),
   } satisfies TemporaryShare;
 }

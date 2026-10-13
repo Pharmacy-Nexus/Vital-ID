@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 
 export type ClinicianTokenPayload = {
+  sessionId: string;
   qrSlug: string;
   patientId: string;
   exp: number;
@@ -23,6 +24,7 @@ export function signClinicianToken(payload: ClinicianTokenPayload) {
 }
 
 export function verifyClinicianToken(token: string): ClinicianTokenPayload | null {
+  if (!token || token.length > 2000) return null;
   const [encoded, signature] = token.split(".");
   if (!encoded || !signature) return null;
   const expected = crypto.createHmac("sha256", secret()).update(encoded).digest("base64url");
@@ -31,7 +33,7 @@ export function verifyClinicianToken(token: string): ClinicianTokenPayload | nul
   if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
   try {
     const payload = JSON.parse(Buffer.from(encoded, "base64url").toString("utf8")) as ClinicianTokenPayload;
-    if (!payload.patientId || !payload.qrSlug || !payload.exp || payload.exp < Date.now()) return null;
+    if (!payload.sessionId || !payload.patientId || !payload.qrSlug || !Number.isFinite(payload.exp) || payload.exp < Date.now()) return null;
     return payload;
   } catch {
     return null;

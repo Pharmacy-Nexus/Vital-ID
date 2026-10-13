@@ -7,6 +7,22 @@ import { addActivity } from "@/lib/store";
 import { upsertCloudDevice } from "@/lib/cloud/repository";
 
 const KEY = "vital-id-linked-devices-v3";
+const IDENTITY = "vital-id-current-device-user";
+const currentIdentity = () => typeof window !== "undefined" ? sessionStorage.getItem(IDENTITY) : null;
+const stateKey = () => currentIdentity() ? `vital-id-private-devices:${currentIdentity()}` : KEY;
+const stateStorage = () => currentIdentity() ? sessionStorage : localStorage;
+export function switchDeviceIdentity(userId: string | null) {
+  if (typeof window === "undefined") return false;
+  const old = currentIdentity();
+  if (old === userId) return false;
+  if (old) sessionStorage.removeItem(`vital-id-private-devices:${old}`);
+  localStorage.removeItem(KEY);
+  localStorage.removeItem(LEGACY_STATUS_KEY);
+  sessionStorage.removeItem(IDENTITY);
+  if (userId) sessionStorage.setItem(IDENTITY, userId);
+  window.dispatchEvent(new CustomEvent(EVENT));
+  return true;
+}
 const EVENT = "vital-id-device-state-changed";
 const LEGACY_STATUS_KEY = "vital-id-devices";
 const hasWindow = () => typeof window !== "undefined";
@@ -31,10 +47,10 @@ function seeded(): LinkedDevice[] {
 export function readDevices(): LinkedDevice[] {
   if (!hasWindow()) return seeded();
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = stateStorage().getItem(stateKey());
     if (!raw) {
       const initial = seeded();
-      localStorage.setItem(KEY, JSON.stringify(initial));
+      stateStorage().setItem(stateKey(), JSON.stringify(initial));
       return initial;
     }
     const parsed = JSON.parse(raw) as LinkedDevice[];
@@ -46,7 +62,7 @@ export function readDevices(): LinkedDevice[] {
 
 export function writeDevices(devices: LinkedDevice[]) {
   if (!hasWindow()) return;
-  localStorage.setItem(KEY, JSON.stringify(devices.map(normalize)));
+  stateStorage().setItem(stateKey(), JSON.stringify(devices.map(normalize)));
   window.dispatchEvent(new CustomEvent(EVENT));
 }
 
@@ -121,7 +137,7 @@ export function updateDeviceByQr(qrSlug: string, updater: (device: LinkedDevice)
 
 export function resetDevices() {
   if (!hasWindow()) return;
-  localStorage.removeItem(KEY);
+  stateStorage().removeItem(stateKey());
   writeDevices(seeded());
 }
 
@@ -141,9 +157,5 @@ export function useDevices() {
 }
 
 export function hydrateDevicesFromCloud(devices: LinkedDevice[]) {
-  if (!devices.length) return;
-  const local = readDevices();
-  const byId = new Map(local.map((device) => [device.id, device]));
-  devices.forEach((device) => byId.set(device.id, normalize(device)));
-  writeDevices(Array.from(byId.values()));
+  writeDevices(devices.map(normalize));
 }
