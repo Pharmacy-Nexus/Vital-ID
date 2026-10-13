@@ -1,34 +1,31 @@
+import { readBoundedJson } from "@/lib/server/boundedJson";
 import { NextResponse } from "next/server";
-import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
-import { verifyClinicianToken } from "@/lib/server/sessionToken";
+import { authorizedClinician } from "@/lib/server/clinicianAccess";
+import { authorizedMedicalPath } from "@/lib/server/storageAuthorization";
+import { medicalNoStore, enforceRateLimit } from "@/lib/server/rateLimit";
 import type { PatientProfile } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
-  const supabase = getSupabaseAdmin();
-  if (!supabase) return NextResponse.json({ error: "cloud_not_configured" }, { status: 503 });
-
-  const url = new URL(request.url);
-  const token = url.searchParams.get("token") ?? "";
-  const documentId = url.searchParams.get("documentId") ?? "";
-  const payload = verifyClinicianToken(token);
-  if (!payload) return NextResponse.json({ error: "invalid_session" }, { status: 401 });
-
-  const { data: patientRow, error } = await supabase
-    .from("patients")
-    .select("data")
-    .eq("id", payload.patientId)
-    .single();
-
-  if (error || !patientRow) return NextResponse.json({ error: "patient_not_found" }, { status: 404 });
-  const patient = patientRow.data as PatientProfile;
-  const doc = patient.documents.find((item) => item.id === documentId);
-  if (!doc?.fileKey?.startsWith("cloud:")) return NextResponse.json({ error: "file_not_found" }, { status: 404 });
-
-  const path = doc.fileKey.slice("cloud:".length);
-  const { data, error: signedError } = await supabase.storage.from("medical-documents").createSignedUrl(path, 300);
-  if (signedError || !data?.signedUrl) return NextResponse.json({ error: "sign_failed" }, { status: 500 });
-
-  return NextResponse.json({ url: data.signedUrl });
+// POST avoids putting the clinician bearer token in URLs, referers and access logs.
+export async function POST(request: Request) {
+  if (Number(request.headers.get("content-length") ?? 0) > 4096) return NextResponse.json({ error: "too_large" }, { status: 413 });
+  const { token, documentId } = await readBoundedJson(request) ?? {};
+  if (typeof token !== "string" || typeof documentId !== "string" || documentId.length > 100)
+    return NextResponse.json({ error: "invalid_request" }, { status: 400 });
+  const limited = await enforceRateLimit(request, "clinician-document", 100, 60, token.slice(0, 100));
+  if (limited) return limited;
+  const allowed = await authorizedClinician(token);
+  if (!allowed) return NextResponse.json({ error: "invalid_session" }, { status: 401, headers: medicalNoStore });
+  const { admin, session } = allowed;
+  const { data: row } = await admin.from("patients").select("owner_id,slug,data")
+    .eq("id", session.patient_id).eq("owner_id", session.owner_id).maybeSingle();
+  if (!row) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  const profile = row.data as PatientProfile;
+  const doc = (profile.documents ?? []).find(d => d.id === documentId);
+  const path = authorizedMedicalPath(row.owner_id, row.slug, doc?.fileKey);
+  if (!path) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  const { data, error } = await admin.storage.from("medical-documents").createSignedUrl(path, 30);
+  if (error || !data?.signedUrl) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  return NextResponse.json({ url: data.signedUrl }, { headers: medicalNoStore });
 }

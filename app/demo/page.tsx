@@ -13,7 +13,7 @@ export default function DemoPage() {
     { icon: QrCode, title: tr("Scan QR", "امسح QR"), desc: tr("Use another phone to scan the demo QR code on the homepage.", "استخدم هاتفًا آخر لمسح رمز QR التجريبي من الصفحة الرئيسية.") },
     { icon: Eye, title: tr("See emergency information", "اعرض بيانات الطوارئ"), desc: tr("Emergency-visible allergies, conditions and medications appear instantly.", "تظهر الحساسية والحالات والأدوية المحددة للطوارئ فورًا.") },
     { icon: Lock, title: tr("Request protected record", "اطلب السجل المحمي"), desc: tr("Tap 'I'm a Healthcare Professional'.", "اضغط أنا مقدم رعاية صحية.") },
-    { icon: Key, title: tr("Use OTP 4827", "استخدم الرمز 4827"), desc: tr("Enter the demo authorization code.", "أدخل رمز الدخول التجريبي.") },
+    { icon: Key, title: tr("Offline demo: OTP 4827", "التجربة المحلية فقط: الرمز 4827"), desc: tr("Local demonstration only. Never valid for cloud patient records.", "للتجربة المحلية فقط، ولا يفتح بيانات المرضى السحابية.") },
     { icon: FileText, title: tr("View full medical history", "اعرض السجل الطبي الكامل"), desc: tr("The doctor view uses the same patient data.", "واجهة الطبيب تستخدم نفس بيانات المريض.") },
     { icon: X, title: tr("End session", "أنهِ الجلسة"), desc: tr("Temporary access expires after 20 minutes or manually.", "ينتهي الوصول بعد 20 دقيقة أو عند إنهائه يدويًا.") },
     { icon: Smartphone, title: tr("Open patient dashboard", "افتح لوحة المريض"), desc: tr("Edit the same medical profile at any time.", "عدّل نفس الملف الطبي في أي وقت.") },

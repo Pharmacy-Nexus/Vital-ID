@@ -8,6 +8,7 @@ import DemoTag from "@/components/ui/DemoTag";
 import { getDeviceByQrSlug, markDeviceScanned } from "@/lib/deviceStore";
 import { usePatient } from "@/lib/patientStore";
 import { useLang } from "@/components/ui/LangProvider";
+import { isCloudConfigured } from "@/lib/cloud/supabaseBrowser";
 import type { LinkedDevice, PatientProfile } from "@/lib/types";
 
 export default function MedicalIdPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -47,19 +48,23 @@ export default function MedicalIdPage({ params }: { params: Promise<{ slug: stri
           }
           return;
         }
-        if (!cancelled && response.status === 410) {
-          setRemoteDisabled(true);
+        if (!cancelled) {
+          // Previously cached emergency data cannot remain visible after a
+          // failed/revoked lookup. Never fall back to owner-local data.
+          setRemotePatient(null);
+          setRemoteDevice(null);
+          setRemoteDisabled(response.status === 410);
           setResolved(true);
         }
       } catch {
-        // Local demo fallback remains available when cloud is not configured.
+        if (!cancelled) { setRemotePatient(null); setRemoteDevice(null); }
       } finally {
         if (!cancelled) setResolved(true);
       }
     };
 
     void loadCloud(true);
-    const timer = window.setInterval(() => void loadCloud(false), 15000);
+    const timer = window.setInterval(() => { if (document.visibilityState === "visible") void loadCloud(false); }, 60000);
     const onVisible = () => { if (document.visibilityState === "visible") void loadCloud(false); };
     document.addEventListener("visibilitychange", onVisible);
 
@@ -72,8 +77,11 @@ export default function MedicalIdPage({ params }: { params: Promise<{ slug: stri
 
   const localPatientSlug = useMemo(() => localDevice?.patientSlug ?? (slug.startsWith("demo-") ? slug : "__invalid__"), [localDevice, slug]);
   const localPatient = usePatient(localPatientSlug);
-  const patient = remotePatient ?? localPatient;
-  const device = remoteDevice ?? localDevice;
+  const canUseLocal = !isCloudConfigured() || slug.startsWith("demo-") || slug.includes("-demo-");
+  // In a configured deployment, network errors must never expose local private
+  // owner state as a public QR response.
+  const patient = remotePatient ?? (canUseLocal ? localPatient : null);
+  const device = remoteDevice ?? (canUseLocal ? localDevice : null);
   const isRemote = Boolean(remotePatient && remoteDevice);
   const isActive = remoteDisabled ? false : device ? device.status === "active" : slug.startsWith("demo-");
 

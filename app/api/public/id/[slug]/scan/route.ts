@@ -1,68 +1,32 @@
+import { readBoundedJson } from "@/lib/server/boundedJson";
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/server/supabaseAdmin";
-import type { LinkedDevice } from "@/lib/types";
-
+import { enforceRateLimit, medicalNoStore } from "@/lib/server/rateLimit";
 export const dynamic = "force-dynamic";
 
-type Body = {
-  event?: "scan" | "location";
-  latitude?: number;
-  longitude?: number;
-};
-
+type ScanBody = { event?: "scan" | "location"; latitude?: number; longitude?: number };
 export async function POST(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const supabase = getSupabaseAdmin();
-  if (!supabase) return NextResponse.json({ error: "cloud_not_configured" }, { status: 503 });
-
-  const body = (await request.json().catch(() => ({}))) as Body;
-  const { data: deviceRow, error } = await supabase
-    .from("devices")
-    .select("id,owner_id,patient_id,status,data")
-    .eq("qr_slug", slug)
-    .maybeSingle();
-
-  if (error) return NextResponse.json({ error: "device_lookup_failed" }, { status: 500 });
-  if (!deviceRow || deviceRow.status !== "active") return NextResponse.json({ error: "not_found" }, { status: 404 });
-
+  if (!/^[A-Za-z0-9_-]{4,100}$/.test(slug)) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  const limited = await enforceRateLimit(request, "qr-event", 80, 60, slug);
+  if (limited) return limited;
+  if (Number(request.headers.get("content-length") ?? 0) > 2048) return NextResponse.json({ error: "too_large" }, { status: 413 });
+  const body = await readBoundedJson(request, 2048) as ScanBody | null;
+  if (!body || (body.event !== undefined && body.event !== "scan" && body.event !== "location"))
+    return NextResponse.json({ error: "invalid_event" }, { status: 400 });
   const event = body.event === "location" ? "location" : "scan";
-  const device = deviceRow.data as LinkedDevice;
-  const now = new Date().toISOString();
-
-  if (event === "scan") {
-    await supabase
-      .from("devices")
-      .update({ data: { ...device, lastScanned: now } })
-      .eq("id", deviceRow.id);
-  }
-
-  const detail = event === "location" && Number.isFinite(body.latitude) && Number.isFinite(body.longitude)
-    ? `${device.name} · ${Number(body.latitude).toFixed(4)}, ${Number(body.longitude).toFixed(4)}`
-    : `${device.name} · ${slug}`;
-
-  let shouldInsert = true;
-  if (event === "scan") {
-    const since = new Date(Date.now() - 30_000).toISOString();
-    const { data: recent } = await supabase
-      .from("activity_logs")
-      .select("id")
-      .eq("device_id", deviceRow.id)
-      .eq("title", "Medical ID scanned")
-      .gte("created_at", since)
-      .limit(1);
-    shouldInsert = !recent?.length;
-  }
-
-  if (shouldInsert) {
-    await supabase.from("activity_logs").insert({
-      owner_id: deviceRow.owner_id,
-      patient_id: deviceRow.patient_id,
-      device_id: deviceRow.id,
-      type: event === "location" ? "access" : "scan",
-      title: event === "location" ? "Location shared" : "Medical ID scanned",
-      detail,
-    });
-  }
-
-  return NextResponse.json({ ok: true });
+  if (event === "location" && (typeof body.latitude !== "number" || typeof body.longitude !== "number" ||
+      !Number.isFinite(body.latitude) || !Number.isFinite(body.longitude) ||
+      Math.abs(body.latitude) > 90 || Math.abs(body.longitude) > 180))
+    return NextResponse.json({ error: "invalid_location" }, { status: 400 });
+  const admin = getSupabaseAdmin();
+  if (!admin) return NextResponse.json({ error: "cloud_not_configured" }, { status: 503 });
+  const detail = event === "location"
+    ? `Unverified device-provided coordinates ${body.latitude!.toFixed(4)}, ${body.longitude!.toFixed(4)}`
+    : `Medical QR scanned`;
+  const { error: recordError } = await admin.rpc("vital_record_scan", {
+    p_qr_slug: slug, p_event: event, p_detail: detail,
+  });
+  if (recordError) return NextResponse.json({ error: "event_unavailable" }, { status: 503, headers: medicalNoStore });
+  return NextResponse.json({ ok: true }, { headers: medicalNoStore });
 }
