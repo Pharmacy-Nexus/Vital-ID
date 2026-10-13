@@ -1,3 +1,5 @@
+> **SECURITY UPDATE 2026-10-13:** The historical README below describes an older prototype. Critical security behavior has changed. **Follow `HARDENING_DEPLOY_AR.md` and `SUPABASE_SETUP.md` instead of the outdated steps below.** An actual Supabase migration, staging tests, dependency build and penetration test are required before production use. Legacy 4827 OTP is offline demo-only.
+
 # VITAL ID — Editorial Homepage v4.2
 
 # VITAL ID Functional Demo v4 — Cloud Sync
@@ -8,12 +10,12 @@ This version moves the important shared state from a one-browser demo toward a r
 
 - **Cloud patient sync**: edits from Dashboard → Medical can be stored in Supabase and then read from a QR scan on another phone/browser.
 - **Per-device QR identity**: every bracelet/card/tag keeps its own `qrSlug`, active/deactivated state and emergency display settings.
-- **Live emergency view**: `/id/<qrSlug>` tries the server/cloud first, uses `no-store`, refreshes every 15 seconds while open, and refreshes when the tab becomes visible again.
+- **Live emergency view**: `/id/<qrSlug>` tries the server/cloud first, uses `no-store`, refreshes every 60 seconds while visible, and refreshes when the tab becomes visible again.
 - **Server-side emergency filtering**: private items are stripped before the public response is sent. Hidden sections are not merely hidden with CSS.
 - **Cloud owner authentication**: `/login` supports Supabase email/password sign-in and account creation.
-- **Dashboard cloud status**: the owner sees whether cloud sync is connected. The first signed-in session uploads the existing local demo state if the cloud account is empty.
+- **Dashboard cloud status**: the owner sees whether cloud sync is connected. Signed-in accounts do not automatically import browser-local records; local data needs a reviewed/manual import workflow.
 - **Cloud documents/images**: when the owner is signed in, new uploads go to the private Supabase Storage bucket `medical-documents`; local IndexedDB remains the fallback when signed out.
-- **Authorized clinician document view**: cloud files can be opened through a short-lived clinician session after the demo OTP.
+- **Authorized clinician document view**: cloud files can be opened through a short-lived clinician session after owner-approved FULL temporary-share authorization.
 - **Cloud activity**: public scans and shared locations are written to `activity_logs` and pulled into the owner dashboard.
 - **Unique patient activation**: a newly activated person gets a unique patient slug instead of overwriting `demo-001`.
 - **Dynamic family profiles**: Family now lists patient profiles and lets the owner switch which one is being managed.
@@ -29,7 +31,7 @@ The minimum sequence is:
 3. Add the variables from `.env.example` to Vercel.
 4. Redeploy.
 5. Open `/login`, create/sign into the owner account.
-6. Wait for **Cloud synced** on the Dashboard.
+6. Apply security migration 004 and run tests on staging. Then verify **Cloud synced**; the browser does not auto-import demo data.
 7. Edit an Emergency-visible medical item and scan the device QR from another phone.
 
 ## Important routes
@@ -44,7 +46,7 @@ The minimum sequence is:
 - `/dashboard/family` — switch/manage multiple patient profiles
 - `/id/<qrSlug>` — public emergency view for one physical ID
 
-Demo clinician OTP: `4827` (configurable with `VITAL_ID_DEMO_OTP`).
+**Offline demo ONLY:** OTP `4827`. In a configured cloud deployment this code is rejected; clinicians require an explicit, full-record temporary share issued by the patient owner. See `HARDENING_DEPLOY_AR.md`.
 
 ## Storage model
 
